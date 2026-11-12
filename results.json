@@ -1,0 +1,1275 @@
+{
+ "meta": {
+  "date": "2026-11-11 12:08 UTC",
+  "reps": 7,
+  "cpu": "AMD Ryzen 5 6600H with Radeon Graphics",
+  "cores": 6,
+  "mem_mb": 10457,
+  "os": "Debian GNU/Linux 13 (trixie)",
+  "kernel": "6.12.90+deb13-amd64",
+  "go_version": "go version go1.24.4 linux/amd64",
+  "crystal_version": "Crystal 1.22.2 [1447d239f] (2026-10-29)  LLVM: 22.1.3"
+ },
+ "results": {
+  "fib": {
+   "category": "Compute",
+   "title": "Recursive Fibonacci",
+   "desc": "fib(38): ~126M function calls, pure integer recursion",
+   "crystal": {
+    "median_ms": 154.192,
+    "min_ms": 152.128,
+    "max_ms": 158.933,
+    "stdev_ms": 2.089601768524427,
+    "times_ms": [
+     158.933,
+     153.976,
+     154.367,
+     154.606,
+     152.254,
+     154.192,
+     152.128
+    ],
+    "checksum": 39088169,
+    "stable": true,
+    "peak_rss_mb": 6.04296875,
+    "process_wall_ms": 1285.1778639887925
+   },
+   "go": {
+    "median_ms": 149.274,
+    "min_ms": 148.972,
+    "max_ms": 149.723,
+    "stdev_ms": 0.21588782045407046,
+    "times_ms": [
+     149.274,
+     149.184,
+     149.358,
+     148.972,
+     149.723,
+     149.223,
+     149.43
+    ],
+    "checksum": 39088169,
+    "stable": true,
+    "peak_rss_mb": 4.046875,
+    "process_wall_ms": 1202.615695015993
+   },
+   "go_p1": {
+    "median_ms": 157.787,
+    "min_ms": 155.101,
+    "max_ms": 162.122,
+    "stdev_ms": 2.656156667988166,
+    "times_ms": [
+     161.222,
+     157.787,
+     160.746,
+     156.641,
+     155.101,
+     162.122,
+     155.618
+    ],
+    "checksum": 39088169,
+    "stable": true,
+    "peak_rss_mb": 4.19921875,
+    "process_wall_ms": 1277.840038004797
+   },
+   "checksum_match": true
+  },
+  "collatz": {
+   "category": "Compute",
+   "title": "Collatz chains",
+   "desc": "Longest Collatz chain for every start below 2M (tight integer loop)",
+   "crystal": {
+    "median_ms": 328.431,
+    "min_ms": 323.69,
+    "max_ms": 332.217,
+    "stdev_ms": 2.334305123192606,
+    "times_ms": [
+     327.602,
+     328.431,
+     329.056,
+     323.69,
+     328.873,
+     332.217,
+     327.901
+    ],
+    "checksum": 1723519556,
+    "stable": true,
+    "peak_rss_mb": 5.9765625,
+    "process_wall_ms": 2639.5376390137244
+   },
+   "go": {
+    "median_ms": 315.046,
+    "min_ms": 300.55,
+    "max_ms": 340.839,
+    "stdev_ms": 13.7180427904275,
+    "times_ms": [
+     331.096,
+     321.194,
+     340.839,
+     315.046,
+     300.55,
+     305.047,
+     306.25
+    ],
+    "checksum": 1723519556,
+    "stable": true,
+    "peak_rss_mb": 4.19921875,
+    "process_wall_ms": 2566.573788993992
+   },
+   "go_p1": {
+    "median_ms": 325.964,
+    "min_ms": 318.674,
+    "max_ms": 335.163,
+    "stdev_ms": 5.297309894885239,
+    "times_ms": [
+     322.11,
+     318.674,
+     331.132,
+     325.964,
+     321.842,
+     335.163,
+     326.351
+    ],
+    "checksum": 1723519556,
+    "stable": true,
+    "peak_rss_mb": 4.19921875,
+    "process_wall_ms": 2617.255443998147
+   },
+   "checksum_match": true
+  },
+  "sieve": {
+   "category": "Compute",
+   "title": "Sieve of Eratosthenes",
+   "desc": "Primes below 20M in a 20 MB boolean array",
+   "crystal": {
+    "median_ms": 141.94,
+    "min_ms": 122.739,
+    "max_ms": 157.617,
+    "stdev_ms": 11.812996930914519,
+    "times_ms": [
+     148.255,
+     141.94,
+     122.739,
+     124.806,
+     147.659,
+     137.332,
+     157.617
+    ],
+    "checksum": 1270607,
+    "stable": true,
+    "peak_rss_mb": 45.3046875,
+    "process_wall_ms": 1112.6048949954566
+   },
+   "go": {
+    "median_ms": 129.699,
+    "min_ms": 117.265,
+    "max_ms": 150.297,
+    "stdev_ms": 9.67178294138708,
+    "times_ms": [
+     122.645,
+     129.699,
+     117.265,
+     131.856,
+     134.074,
+     150.297,
+     127.215
+    ],
+    "checksum": 1270607,
+    "stable": true,
+    "peak_rss_mb": 42.81640625,
+    "process_wall_ms": 1091.1323219770566
+   },
+   "go_p1": {
+    "median_ms": 112.512,
+    "min_ms": 108.356,
+    "max_ms": 147.912,
+    "stdev_ms": 13.988893537666348,
+    "times_ms": [
+     147.912,
+     112.512,
+     108.68,
+     108.356,
+     131.155,
+     130.358,
+     112.403
+    ],
+    "checksum": 1270607,
+    "stable": true,
+    "peak_rss_mb": 42.8046875,
+    "process_wall_ms": 992.3473699891474
+   },
+   "checksum_match": true
+  },
+  "mandelbrot": {
+   "category": "Compute",
+   "title": "Mandelbrot",
+   "desc": "1000x1000 grid, 100 iterations, float64 math",
+   "crystal": {
+    "median_ms": 70.499,
+    "min_ms": 70.037,
+    "max_ms": 74.239,
+    "stdev_ms": 1.489268660402529,
+    "times_ms": [
+     72.139,
+     74.239,
+     70.037,
+     70.423,
+     70.063,
+     70.499,
+     72.631
+    ],
+    "checksum": 257983,
+    "stable": true,
+    "peak_rss_mb": 6.12890625,
+    "process_wall_ms": 579.8560759867541
+   },
+   "go": {
+    "median_ms": 72.493,
+    "min_ms": 70.753,
+    "max_ms": 74.826,
+    "stdev_ms": 1.293595416674322,
+    "times_ms": [
+     72.493,
+     71.399,
+     74.826,
+     73.226,
+     73.453,
+     71.711,
+     70.753
+    ],
+    "checksum": 257983,
+    "stable": true,
+    "peak_rss_mb": 4.1953125,
+    "process_wall_ms": 588.4537319943774
+   },
+   "go_p1": {
+    "median_ms": 70.98,
+    "min_ms": 67.942,
+    "max_ms": 74.118,
+    "stdev_ms": 2.137019878050664,
+    "times_ms": [
+     74.118,
+     70.78,
+     70.98,
+     72.291,
+     73.463,
+     67.942,
+     68.689
+    ],
+    "checksum": 257983,
+    "stable": true,
+    "peak_rss_mb": 4.19921875,
+    "process_wall_ms": 579.6479310083669
+   },
+   "checksum_match": true
+  },
+  "nbody": {
+   "category": "Compute",
+   "title": "N-body simulation",
+   "desc": "5 bodies, 3M steps, float64 math + sqrt",
+   "crystal": {
+    "median_ms": 262.359,
+    "min_ms": 253.642,
+    "max_ms": 289.708,
+    "stdev_ms": 13.150941400306134,
+    "times_ms": [
+     267.675,
+     262.359,
+     256.423,
+     253.642,
+     289.708,
+     284.971,
+     259.059
+    ],
+    "checksum": -169019082,
+    "stable": true,
+    "peak_rss_mb": 6.21484375,
+    "process_wall_ms": 2152.4319330055732
+   },
+   "go": {
+    "median_ms": 212.058,
+    "min_ms": 200.437,
+    "max_ms": 231.621,
+    "stdev_ms": 9.299492163005242,
+    "times_ms": [
+     231.621,
+     221.165,
+     217.081,
+     210.261,
+     212.058,
+     208.214,
+     200.437
+    ],
+    "checksum": -169019082,
+    "stable": true,
+    "peak_rss_mb": 4.1953125,
+    "process_wall_ms": 1726.447769004153
+   },
+   "go_p1": {
+    "median_ms": 206.98,
+    "min_ms": 196.334,
+    "max_ms": 213.154,
+    "stdev_ms": 6.18192939963251,
+    "times_ms": [
+     212.789,
+     213.154,
+     210.277,
+     202.177,
+     199.439,
+     196.334,
+     206.98
+    ],
+    "checksum": -169019082,
+    "stable": true,
+    "peak_rss_mb": 4.13671875,
+    "process_wall_ms": 1665.8082700159866
+   },
+   "checksum_match": true
+  },
+  "matmul": {
+   "category": "Compute",
+   "title": "Matrix multiply",
+   "desc": "400x400 float64, naive triple loop on flat arrays",
+   "crystal": {
+    "median_ms": 48.769,
+    "min_ms": 46.796,
+    "max_ms": 53.119,
+    "stdev_ms": 1.924708724318926,
+    "times_ms": [
+     53.119,
+     50.222,
+     50.391,
+     46.796,
+     48.769,
+     48.039,
+     48.208
+    ],
+    "checksum": 1051200000,
+    "stable": true,
+    "peak_rss_mb": 14.09375,
+    "process_wall_ms": 412.35405902261846
+   },
+   "go": {
+    "median_ms": 52.692,
+    "min_ms": 49.862,
+    "max_ms": 58.702,
+    "stdev_ms": 2.8906379142017085,
+    "times_ms": [
+     51.344,
+     54.3,
+     52.692,
+     55.167,
+     58.702,
+     49.862,
+     50.32
+    ],
+    "checksum": 1051200000,
+    "stable": true,
+    "peak_rss_mb": 14.56640625,
+    "process_wall_ms": 436.77625100826845
+   },
+   "go_p1": {
+    "median_ms": 53.49,
+    "min_ms": 51.374,
+    "max_ms": 59.412,
+    "stdev_ms": 2.8584014513610323,
+    "times_ms": [
+     53.099,
+     52.149,
+     57.223,
+     57.392,
+     53.49,
+     51.374,
+     59.412
+    ],
+    "checksum": 1051200000,
+    "stable": true,
+    "peak_rss_mb": 12.71484375,
+    "process_wall_ms": 447.6963169872761
+   },
+   "checksum_match": true
+  },
+  "nqueens": {
+   "category": "Compute",
+   "title": "N-Queens (n=14)",
+   "desc": "Bitmask backtracking, 365,596 solutions",
+   "crystal": {
+    "median_ms": 192.963,
+    "min_ms": 186.964,
+    "max_ms": 202.597,
+    "stdev_ms": 5.826612958780476,
+    "times_ms": [
+     186.964,
+     194.064,
+     202.597,
+     200.756,
+     192.963,
+     186.99,
+     189.424
+    ],
+    "checksum": 365596,
+    "stable": true,
+    "peak_rss_mb": 6.07421875,
+    "process_wall_ms": 1566.4016070077196
+   },
+   "go": {
+    "median_ms": 162.08,
+    "min_ms": 147.729,
+    "max_ms": 165.676,
+    "stdev_ms": 6.023182920167363,
+    "times_ms": [
+     165.589,
+     165.676,
+     156.822,
+     162.08,
+     165.165,
+     159.846,
+     147.729
+    ],
+    "checksum": 365596,
+    "stable": true,
+    "peak_rss_mb": 4.19921875,
+    "process_wall_ms": 1295.841337996535
+   },
+   "go_p1": {
+    "median_ms": 162.978,
+    "min_ms": 160.521,
+    "max_ms": 163.388,
+    "stdev_ms": 1.1711507684533982,
+    "times_ms": [
+     163.024,
+     163.361,
+     162.978,
+     163.388,
+     162.791,
+     160.521,
+     160.584
+    ],
+    "checksum": 365596,
+    "stable": true,
+    "peak_rss_mb": 4.19921875,
+    "process_wall_ms": 1304.6416070137639
+   },
+   "checksum_match": true
+  },
+  "lcs": {
+   "category": "Compute",
+   "title": "Longest common subsequence",
+   "desc": "Dynamic programming on two 8000-char strings (64M cells)",
+   "crystal": {
+    "median_ms": 184.463,
+    "min_ms": 180.149,
+    "max_ms": 191.13,
+    "stdev_ms": 3.769486161052633,
+    "times_ms": [
+     181.734,
+     183.144,
+     185.772,
+     191.13,
+     184.463,
+     180.149,
+     189.856
+    ],
+    "checksum": 5227,
+    "stable": true,
+    "peak_rss_mb": 6.4296875,
+    "process_wall_ms": 1493.5646840021946
+   },
+   "go": {
+    "median_ms": 161.378,
+    "min_ms": 154.588,
+    "max_ms": 176.033,
+    "stdev_ms": 6.331331036510217,
+    "times_ms": [
+     176.033,
+     167.494,
+     161.798,
+     161.378,
+     159.39,
+     161.321,
+     154.588
+    ],
+    "checksum": 5227,
+    "stable": true,
+    "peak_rss_mb": 4.13671875,
+    "process_wall_ms": 1322.5234300189186
+   },
+   "go_p1": {
+    "median_ms": 153.888,
+    "min_ms": 153.778,
+    "max_ms": 169.592,
+    "stdev_ms": 5.347115297055043,
+    "times_ms": [
+     158.272,
+     169.592,
+     157.511,
+     153.86,
+     153.888,
+     153.778,
+     153.807
+    ],
+    "checksum": 5227,
+    "stable": true,
+    "peak_rss_mb": 4.1953125,
+    "process_wall_ms": 1272.446671006037
+   },
+   "checksum_match": true
+  },
+  "binarytrees": {
+   "category": "Data structures",
+   "title": "Binary trees",
+   "desc": "Allocate/walk/discard ~17M tree nodes (GC stress)",
+   "crystal": {
+    "median_ms": 354.002,
+    "min_ms": 347.436,
+    "max_ms": 376.053,
+    "stdev_ms": 10.363096385437972,
+    "times_ms": [
+     370.813,
+     351.631,
+     348.401,
+     354.002,
+     356.776,
+     376.053,
+     347.436
+    ],
+    "checksum": 17423838,
+    "stable": true,
+    "peak_rss_mb": 25.15625,
+    "process_wall_ms": 2891.365299001336
+   },
+   "go": {
+    "median_ms": 576.376,
+    "min_ms": 554.342,
+    "max_ms": 644.099,
+    "stdev_ms": 27.75743847500844,
+    "times_ms": [
+     576.715,
+     576.376,
+     570.468,
+     584.637,
+     644.099,
+     554.342,
+     557.8
+    ],
+    "checksum": 17423838,
+    "stable": true,
+    "peak_rss_mb": 40.1015625,
+    "process_wall_ms": 4623.929499997757
+   },
+   "go_p1": {
+    "median_ms": 758.894,
+    "min_ms": 659.373,
+    "max_ms": 829.193,
+    "stdev_ms": 56.203771954543804,
+    "times_ms": [
+     659.373,
+     829.193,
+     821.584,
+     819.04,
+     758.894,
+     756.72,
+     738.198
+    ],
+    "checksum": 17423838,
+    "stable": true,
+    "peak_rss_mb": 116.703125,
+    "process_wall_ms": 6030.692477012053
+   },
+   "checksum_match": true
+  },
+  "sort": {
+   "category": "Data structures",
+   "title": "Sort 2M integers",
+   "desc": "Standard-library sort on 2M pseudo-random Int64",
+   "crystal": {
+    "median_ms": 116.294,
+    "min_ms": 115.52,
+    "max_ms": 120.667,
+    "stdev_ms": 1.8384763101158381,
+    "times_ms": [
+     119.026,
+     115.979,
+     115.52,
+     116.294,
+     118.946,
+     120.667,
+     116.264
+    ],
+    "checksum": 217037794101,
+    "stable": true,
+    "peak_rss_mb": 53.64453125,
+    "process_wall_ms": 958.151597995311
+   },
+   "go": {
+    "median_ms": 135.527,
+    "min_ms": 127.702,
+    "max_ms": 145.446,
+    "stdev_ms": 6.787307376903702,
+    "times_ms": [
+     145.446,
+     128.531,
+     131.755,
+     127.702,
+     140.453,
+     144.427,
+     135.527
+    ],
+    "checksum": 217037794101,
+    "stable": true,
+    "peak_rss_mb": 66.796875,
+    "process_wall_ms": 1106.6684800025541
+   },
+   "go_p1": {
+    "median_ms": 129.648,
+    "min_ms": 129.279,
+    "max_ms": 130.664,
+    "stdev_ms": 0.47066301476681466,
+    "times_ms": [
+     130.664,
+     129.509,
+     130.371,
+     129.892,
+     129.648,
+     129.279,
+     129.485
+    ],
+    "checksum": 217037794101,
+    "stable": true,
+    "peak_rss_mb": 34.734375,
+    "process_wall_ms": 1062.2799189877696
+   },
+   "checksum_match": true
+  },
+  "hash_int": {
+   "category": "Data structures",
+   "title": "Hash map (int keys)",
+   "desc": "1M inserts, 2M lookups, 1M deletes",
+   "crystal": {
+    "median_ms": 270.898,
+    "min_ms": 265.588,
+    "max_ms": 276.627,
+    "stdev_ms": 3.8648862274354734,
+    "times_ms": [
+     265.588,
+     273.818,
+     265.753,
+     270.898,
+     269.675,
+     273.557,
+     276.627
+    ],
+    "checksum": 2982447008609,
+    "stable": true,
+    "peak_rss_mb": 95.15625,
+    "process_wall_ms": 2198.302236996824
+   },
+   "go": {
+    "median_ms": 324.695,
+    "min_ms": 276.136,
+    "max_ms": 363.073,
+    "stdev_ms": 30.698216832478675,
+    "times_ms": [
+     281.261,
+     343.685,
+     324.695,
+     300.739,
+     276.136,
+     363.073,
+     339.485
+    ],
+    "checksum": 2982447008609,
+    "stable": true,
+    "peak_rss_mb": 40.94921875,
+    "process_wall_ms": 2548.20955399191
+   },
+   "go_p1": {
+    "median_ms": 271.631,
+    "min_ms": 254.416,
+    "max_ms": 330.78,
+    "stdev_ms": 23.482477977402286,
+    "times_ms": [
+     288.766,
+     264.354,
+     254.416,
+     265.076,
+     271.631,
+     274.775,
+     330.78
+    ],
+    "checksum": 2982447008609,
+    "stable": true,
+    "peak_rss_mb": 42.77734375,
+    "process_wall_ms": 2336.87254099641
+   },
+   "checksum_match": true
+  },
+  "hash_string": {
+   "category": "Data structures",
+   "title": "Hash map (string keys)",
+   "desc": "500k word-count updates over 50k distinct string keys",
+   "crystal": {
+    "median_ms": 112.498,
+    "min_ms": 107.98,
+    "max_ms": 143.97,
+    "stdev_ms": 12.865744245071555,
+    "times_ms": [
+     108.767,
+     107.98,
+     121.913,
+     109.398,
+     143.97,
+     131.954,
+     112.498
+    ],
+    "checksum": 49999026,
+    "stable": true,
+    "peak_rss_mb": 14.48046875,
+    "process_wall_ms": 996.5315290028229
+   },
+   "go": {
+    "median_ms": 57.869,
+    "min_ms": 54.445,
+    "max_ms": 62.004,
+    "stdev_ms": 2.8305138712803024,
+    "times_ms": [
+     61.067,
+     54.445,
+     57.869,
+     60.843,
+     55.534,
+     62.004,
+     55.941
+    ],
+    "checksum": 49999026,
+    "stable": true,
+    "peak_rss_mb": 10.86328125,
+    "process_wall_ms": 490.1905870065093
+   },
+   "go_p1": {
+    "median_ms": 55.418,
+    "min_ms": 52.184,
+    "max_ms": 62.732,
+    "stdev_ms": 3.7092255586440093,
+    "times_ms": [
+     52.184,
+     62.054,
+     55.418,
+     59.657,
+     62.732,
+     55.055,
+     55.27
+    ],
+    "checksum": 49999026,
+    "stable": true,
+    "peak_rss_mb": 27.30078125,
+    "process_wall_ms": 477.4166239949409
+   },
+   "checksum_match": true
+  },
+  "string_builder": {
+   "category": "Strings & regex",
+   "title": "String building & split",
+   "desc": "Build a ~25 MB string, scan every byte, split on commas",
+   "crystal": {
+    "median_ms": 92.649,
+    "min_ms": 91.754,
+    "max_ms": 95.693,
+    "stdev_ms": 1.4603011431110464,
+    "times_ms": [
+     95.693,
+     92.202,
+     92.649,
+     95.298,
+     92.77,
+     92.335,
+     91.754
+    ],
+    "checksum": 61377780,
+    "stable": true,
+    "peak_rss_mb": 166.703125,
+    "process_wall_ms": 786.461951007368
+   },
+   "go": {
+    "median_ms": 123.938,
+    "min_ms": 111.738,
+    "max_ms": 162.232,
+    "stdev_ms": 19.146511049999557,
+    "times_ms": [
+     111.738,
+     115.671,
+     116.499,
+     123.938,
+     137.515,
+     162.232,
+     157.286
+    ],
+    "checksum": 61377780,
+    "stable": true,
+    "peak_rss_mb": 117.1796875,
+    "process_wall_ms": 1106.8976350070443
+   },
+   "go_p1": {
+    "median_ms": 120.177,
+    "min_ms": 115.722,
+    "max_ms": 136.769,
+    "stdev_ms": 7.5060641008263635,
+    "times_ms": [
+     115.722,
+     120.177,
+     126.314,
+     116.067,
+     117.046,
+     136.769,
+     130.039
+    ],
+    "checksum": 61377780,
+    "stable": true,
+    "peak_rss_mb": 148.97265625,
+    "process_wall_ms": 991.9592970109079
+   },
+   "checksum_match": true
+  },
+  "regex": {
+   "category": "Strings & regex",
+   "title": "Regular expressions",
+   "desc": "Two regexes over a 15 MB, 200k-line log (match + capture)",
+   "crystal": {
+    "median_ms": 46.845,
+    "min_ms": 45.246,
+    "max_ms": 49.188,
+    "stdev_ms": 1.2373325819549679,
+    "times_ms": [
+     48.513,
+     46.771,
+     46.272,
+     46.845,
+     45.246,
+     49.188,
+     46.846
+    ],
+    "checksum": 180070790000,
+    "stable": true,
+    "peak_rss_mb": 64.65234375,
+    "process_wall_ms": 422.2321269917302
+   },
+   "go": {
+    "median_ms": 525.116,
+    "min_ms": 512.933,
+    "max_ms": 593.282,
+    "stdev_ms": 27.872314114950157,
+    "times_ms": [
+     525.116,
+     520.875,
+     515.058,
+     593.282,
+     512.933,
+     531.488,
+     564.951
+    ],
+    "checksum": 180070790000,
+    "stable": true,
+    "peak_rss_mb": 69.1328125,
+    "process_wall_ms": 4418.926719023148
+   },
+   "go_p1": {
+    "median_ms": 554.962,
+    "min_ms": 536.519,
+    "max_ms": 568.837,
+    "stdev_ms": 9.174136874265338,
+    "times_ms": [
+     536.519,
+     549.071,
+     568.837,
+     551.907,
+     559.047,
+     554.962,
+     556.905
+    ],
+    "checksum": 180070790000,
+    "stable": true,
+    "peak_rss_mb": 63.12890625,
+    "process_wall_ms": 4509.219740983099
+   },
+   "checksum_match": true
+  },
+  "json_dynamic": {
+   "category": "JSON",
+   "title": "JSON parse (dynamic)",
+   "desc": "Parse 7 MB / 50k objects into generic values, then walk them",
+   "crystal": {
+    "median_ms": 72.627,
+    "min_ms": 71.018,
+    "max_ms": 73.97,
+    "stdev_ms": 0.8876808352702693,
+    "times_ms": [
+     71.952,
+     71.018,
+     72.388,
+     73.97,
+     73.266,
+     72.627,
+     73.078
+    ],
+    "checksum": 1504369999,
+    "stable": true,
+    "peak_rss_mb": 68.703125,
+    "process_wall_ms": 630.5830600031186
+   },
+   "go": {
+    "median_ms": 113.496,
+    "min_ms": 97.463,
+    "max_ms": 118.778,
+    "stdev_ms": 6.743659749448112,
+    "times_ms": [
+     118.778,
+     115.944,
+     107.707,
+     113.926,
+     105.84,
+     97.463,
+     113.496
+    ],
+    "checksum": 1504369999,
+    "stable": true,
+    "peak_rss_mb": 116.3359375,
+    "process_wall_ms": 966.7771760141477
+   },
+   "go_p1": {
+    "median_ms": 132.229,
+    "min_ms": 124.345,
+    "max_ms": 156.729,
+    "stdev_ms": 10.50487796702279,
+    "times_ms": [
+     124.345,
+     156.729,
+     132.263,
+     132.229,
+     127.604,
+     131.543,
+     145.428
+    ],
+    "checksum": 1504369999,
+    "stable": true,
+    "peak_rss_mb": 118.5,
+    "process_wall_ms": 1130.8879109856207
+   },
+   "checksum_match": true
+  },
+  "json_typed": {
+   "category": "JSON",
+   "title": "JSON parse (typed)",
+   "desc": "Parse the same document straight into typed structs/classes",
+   "crystal": {
+    "median_ms": 59.674,
+    "min_ms": 57.292,
+    "max_ms": 65.54,
+    "stdev_ms": 2.790166786032255,
+    "times_ms": [
+     65.54,
+     57.292,
+     61.192,
+     59.674,
+     58.853,
+     58.221,
+     63.639
+    ],
+    "checksum": 1504369999,
+    "stable": true,
+    "peak_rss_mb": 52.58203125,
+    "process_wall_ms": 529.6030350145884
+   },
+   "go": {
+    "median_ms": 118.035,
+    "min_ms": 112.52,
+    "max_ms": 127.376,
+    "stdev_ms": 4.461807238859016,
+    "times_ms": [
+     119.296,
+     113.8,
+     127.376,
+     118.863,
+     112.52,
+     118.035,
+     116.809
+    ],
+    "checksum": 1504369999,
+    "stable": true,
+    "peak_rss_mb": 52.859375,
+    "process_wall_ms": 1057.4164600111544
+   },
+   "go_p1": {
+    "median_ms": 119.698,
+    "min_ms": 113.719,
+    "max_ms": 125.962,
+    "stdev_ms": 4.7242611732050825,
+    "times_ms": [
+     116.889,
+     123.579,
+     114.265,
+     125.962,
+     125.085,
+     113.719,
+     119.698
+    ],
+    "checksum": 1504369999,
+    "stable": true,
+    "peak_rss_mb": 59.421875,
+    "process_wall_ms": 1000.067600980401
+   },
+   "checksum_match": true
+  },
+  "json_serialize": {
+   "category": "JSON",
+   "title": "JSON serialize",
+   "desc": "Serialize 50k typed objects back to JSON text",
+   "crystal": {
+    "median_ms": 35.583,
+    "min_ms": 31.207,
+    "max_ms": 42.595,
+    "stdev_ms": 3.2590286458215902,
+    "times_ms": [
+     37.3,
+     35.583,
+     34.609,
+     42.595,
+     34.002,
+     36.333,
+     31.207
+    ],
+    "checksum": 7889421,
+    "stable": true,
+    "peak_rss_mb": 69.50390625,
+    "process_wall_ms": 390.79023199155927
+   },
+   "go": {
+    "median_ms": 21.179,
+    "min_ms": 19.348,
+    "max_ms": 23.238,
+    "stdev_ms": 1.1396525070102268,
+    "times_ms": [
+     22.109,
+     21.85,
+     21.179,
+     20.583,
+     23.238,
+     21.074,
+     19.348
+    ],
+    "checksum": 7889421,
+    "stable": true,
+    "peak_rss_mb": 86.5625,
+    "process_wall_ms": 371.8580669956282
+   },
+   "go_p1": {
+    "median_ms": 20.173,
+    "min_ms": 18.48,
+    "max_ms": 23.729,
+    "stdev_ms": 1.9051588181694927,
+    "times_ms": [
+     20.23,
+     23.22,
+     20.173,
+     18.48,
+     23.729,
+     18.825,
+     19.71
+    ],
+    "checksum": 7889421,
+    "stable": true,
+    "peak_rss_mb": 57.234375,
+    "process_wall_ms": 328.73122600722127
+   },
+   "checksum_match": true
+  },
+  "sha256": {
+   "category": "Crypto",
+   "title": "SHA-256",
+   "desc": "Hash a 32 MB buffer 4 times",
+   "crystal": {
+    "median_ms": 66.249,
+    "min_ms": 63.73,
+    "max_ms": 67.088,
+    "stdev_ms": 1.0667500328816764,
+    "times_ms": [
+     66.249,
+     65.441,
+     66.282,
+     67.088,
+     63.73,
+     65.012,
+     66.716
+    ],
+    "checksum": 763516537,
+    "stable": true,
+    "peak_rss_mb": 40.95703125,
+    "process_wall_ms": 575.8352029952221
+   },
+   "go": {
+    "median_ms": 61.145,
+    "min_ms": 60.262,
+    "max_ms": 61.367,
+    "stdev_ms": 0.3506238754574708,
+    "times_ms": [
+     60.262,
+     61.363,
+     61.145,
+     61.037,
+     61.131,
+     61.223,
+     61.367
+    ],
+    "checksum": 763516537,
+    "stable": true,
+    "peak_rss_mb": 36.28125,
+    "process_wall_ms": 538.0856629926711
+   },
+   "go_p1": {
+    "median_ms": 65.753,
+    "min_ms": 63.764,
+    "max_ms": 67.619,
+    "stdev_ms": 1.2254548676524404,
+    "times_ms": [
+     65.753,
+     64.823,
+     67.619,
+     65.064,
+     66.273,
+     63.764,
+     66.963
+    ],
+    "checksum": 763516537,
+    "stable": true,
+    "peak_rss_mb": 36.48828125,
+    "process_wall_ms": 577.4048360181041
+   },
+   "checksum_match": true
+  },
+  "chan_pingpong": {
+   "category": "Concurrency",
+   "title": "Channel ping-pong",
+   "desc": "300k unbuffered round trips between two goroutines/fibers",
+   "crystal": {
+    "median_ms": 18.649,
+    "min_ms": 18.088,
+    "max_ms": 19.504,
+    "stdev_ms": 0.4511302811962914,
+    "times_ms": [
+     18.601,
+     18.868,
+     18.649,
+     19.504,
+     18.163,
+     18.974,
+     18.088
+    ],
+    "checksum": 45000150000,
+    "stable": true,
+    "peak_rss_mb": 6.03125,
+    "process_wall_ms": 161.7801359971054
+   },
+   "go": {
+    "median_ms": 59.022,
+    "min_ms": 58.637,
+    "max_ms": 61.84,
+    "stdev_ms": 1.044944115291165,
+    "times_ms": [
+     61.84,
+     59.367,
+     58.637,
+     58.66,
+     58.764,
+     59.256,
+     59.022
+    ],
+    "checksum": 45000150000,
+    "stable": true,
+    "peak_rss_mb": 4.203125,
+    "process_wall_ms": 487.3776199819986
+   },
+   "go_p1": {
+    "median_ms": 68.986,
+    "min_ms": 66.372,
+    "max_ms": 71.089,
+    "stdev_ms": 1.4375630172522609,
+    "times_ms": [
+     71.089,
+     68.432,
+     68.986,
+     69.848,
+     66.372,
+     67.989,
+     70.067
+    ],
+    "checksum": 45000150000,
+    "stable": true,
+    "peak_rss_mb": 4.140625,
+    "process_wall_ms": 560.7369619829115
+   },
+   "checksum_match": true
+  },
+  "spawn_sum": {
+   "category": "Concurrency",
+   "title": "Spawn 100k tasks",
+   "desc": "Spawn 100k goroutines/fibers that each send a value over a channel",
+   "crystal": {
+    "median_ms": 51.01,
+    "min_ms": 44.775,
+    "max_ms": 56.014,
+    "stdev_ms": 3.6002753012648854,
+    "times_ms": [
+     56.014,
+     44.775,
+     51.01,
+     47.792,
+     50.466,
+     54.346,
+     53.266
+    ],
+    "checksum": 9999900000,
+    "stable": true,
+    "peak_rss_mb": 11.2109375,
+    "process_wall_ms": 445.1076140103396
+   },
+   "go": {
+    "median_ms": 37.518,
+    "min_ms": 27.707,
+    "max_ms": 45.402,
+    "stdev_ms": 5.973373381182563,
+    "times_ms": [
+     44.399,
+     34.037,
+     37.518,
+     27.707,
+     45.402,
+     43.492,
+     36.239
+    ],
+    "checksum": 9999900000,
+    "stable": true,
+    "peak_rss_mb": 12.87890625,
+    "process_wall_ms": 313.23443801375106
+   },
+   "go_p1": {
+    "median_ms": 31.893,
+    "min_ms": 30.272,
+    "max_ms": 32.65,
+    "stdev_ms": 0.8840470945069167,
+    "times_ms": [
+     32.303,
+     31.938,
+     30.565,
+     30.614,
+     32.65,
+     31.893,
+     30.272
+    ],
+    "checksum": 9999900000,
+    "stable": true,
+    "peak_rss_mb": 10.86328125,
+    "process_wall_ms": 258.07589598116465
+   },
+   "checksum_match": true
+  }
+ }
+}

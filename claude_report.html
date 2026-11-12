@@ -1,0 +1,1498 @@
+<title>Crystal vs Go Benchmark</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column. Verdict first, then a log-scale parity chart, then the full table, then notes and source. */
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --fg: #16181d;
+  --muted: #5d6068;
+  --line: #dcdcd6;
+  --crystal: #2a78d6;
+  --go: #eb6834;
+  --tie: #9a9c9f;
+  --crystal-ink: #1d5ba8;
+  --go-ink: #b4461b;
+  --code-bg: #f0f0ec;
+  --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131416; --surface: #1b1c1f; --fg: #ececea; --muted: #a2a4a9; --line: #2f3135;
+    --crystal: #3987e5; --go: #d95926; --tie: #6f7276; --crystal-ink: #7db3f2; --go-ink: #f0916b; --code-bg: #222327;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131416; --surface: #1b1c1f; --fg: #ececea; --muted: #a2a4a9; --line: #2f3135;
+  --crystal: #3987e5; --go: #d95926; --tie: #6f7276; --crystal-ink: #7db3f2; --go-ink: #f0916b; --code-bg: #222327;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
+h1, h2 { font-family: var(--font-display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(30px, 6vw, 46px); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-family: var(--font-display); font-size: 16px; margin: 0 0 6px; }
+p { margin: 0; max-width: 68ch; }
+.lede { font-size: 18px; color: var(--muted); max-width: 62ch; margin-top: 14px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+.sec { display: flex; flex-direction: column; gap: 16px; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+.sw.c { background: var(--crystal); } .sw.g { background: var(--go); } .sw.t { background: var(--tie); }
+
+.verdict { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+.verdict > div { min-width: 0; }
+.big { font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
+.big small { font-size: 16px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+.cap { color: var(--muted); font-size: 13px; margin-top: 6px; }
+.verdict ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; }
+.verdict li { margin-bottom: 3px; }
+
+/* ratio chart */
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 16px 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.axisrow, .row { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 12px; align-items: center; }
+.axisrow .ax { position: relative; height: 22px; }
+.tick { position: absolute; transform: translateX(-50%); font-size: 11px; color: var(--muted); white-space: nowrap; font-family: var(--font-mono); }
+.tick:first-child { transform: translateX(-20%); }
+.tick:last-child { transform: translateX(-85%); }
+.cat { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 14px 0 2px; padding-top: 8px; border-top: 1px solid var(--line); }
+.cat:first-of-type { border-top: 0; margin-top: 4px; }
+.row { min-height: 26px; }
+.rl { font-size: 13px; text-align: right; }
+.track { position: relative; height: 18px; }
+.gl { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--line); opacity: 0.55; }
+.gl0 { opacity: 1; background: var(--muted); width: 1.5px; }
+.track b { position: absolute; top: 2px; height: 14px; border-radius: 2px; }
+.bar-c { background: var(--crystal); } .bar-g { background: var(--go); } .bar-t { background: var(--tie); }
+.val { position: absolute; top: 0; line-height: 18px; font-size: 12px; font-family: var(--font-mono); white-space: nowrap; }
+.row:hover .rl { text-decoration: underline; }
+.note { font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+/* table */
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13px; }
+th, td { padding: 9px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+thead th { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); position: sticky; top: 0; background: var(--surface); }
+thead th.n, td.n { text-align: right; }
+td.n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.dim { color: var(--muted); }
+td.win { font-weight: 500; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+td.win:nth-child(2) { text-decoration-color: var(--crystal); }
+td.win:nth-child(3) { text-decoration-color: var(--go); }
+tr.catrow th { background: var(--code-bg); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 6px 12px; }
+tbody th[scope="row"] { font-weight: 500; min-width: 240px; }
+.t { display: block; } .d { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 1px; max-width: 46ch; }
+.pill { display: inline-block; font-family: var(--font-body); font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; margin-right: 4px; border: 1px solid currentColor; }
+.p-crystal { color: var(--crystal-ink); } .p-go { color: var(--go-ink); } .p-tie { color: var(--muted); }
+
+/* notes */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.cols > div { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+.cols p { font-size: 14px; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; margin: 0; font-size: 14px; }
+dt { color: var(--muted); } dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+summary { cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 14px; }
+summary:focus-visible, a:focus-visible { outline: 2px solid var(--crystal); outline-offset: 2px; }
+pre { margin: 0; padding: 14px 16px; overflow-x: auto; background: var(--code-bg); border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 12px; line-height: 1.5; max-height: 520px; border-radius: 0 0 10px 10px; }
+code { font-family: var(--font-mono); font-size: 0.92em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+
+@media (max-width: 640px) {
+  .axisrow, .row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .axisrow .lab { display: none; }
+  .rl { text-align: left; }
+  .row { margin-bottom: 6px; }
+  .big { font-size: 34px; }
+}
+@media (prefers-reduced-motion: no-preference) { .row .track b { transition: opacity .15s; } .row:hover .track b { opacity: .85; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Language benchmark · 2026-11-11</div>
+    <h1>Crystal vs Go, in 20 tests</h1>
+    <p class="lede">Both languages compile to native code. The same 20 programs were written in each, run on one machine, and checked to produce identical results before any timing counted.</p>
+  </header>
+
+  <section class="sec" aria-labelledby="h-verdict">
+    <h2 id="h-verdict">The short version</h2>
+    <div class="verdict">
+      <div>
+        <div class="big">1.35× <small>Crystal faster</small></div>
+        <div class="cap">Geometric mean of Go time ÷ Crystal time across all 20 tests. Above 1.0 means Crystal finished sooner.</div>
+        <p style="margin-top:14px;font-size:14px"><span class="sw c"></span><strong>9</strong> Crystal wins &nbsp; <span class="sw g"></span><strong>5</strong> Go wins &nbsp; <span class="sw t"></span><strong>6</strong> ties</p>
+        <div class="cap">A win means more than 10% faster. Anything closer counts as a tie, because repeat runs on this shared VM vary by 5 to 15%.</div>
+      </div>
+      <div>
+        <h3>Crystal's biggest leads</h3>
+        <ul><li><strong>Regular expressions</strong> 13.4× faster in Crystal (63.0 ms vs 846 ms)</li><li><strong>Channel ping-pong</strong> 4.6× faster in Crystal (29.3 ms vs 136 ms)</li><li><strong>JSON parse (typed)</strong> 2.5× faster in Crystal (74.7 ms vs 188 ms)</li></ul>
+      </div>
+      <div>
+        <h3>Go's biggest leads</h3>
+        <ul><li><strong>N-body simulation</strong> 1.6× faster in Go (294 ms vs 189 ms)</li><li><strong>JSON serialize</strong> 1.5× faster in Go (49.2 ms vs 32.2 ms)</li><li><strong>Hash map (string keys)</strong> 1.3× faster in Go (98.2 ms vs 77.1 ms)</li></ul>
+      </div>
+    </div>
+    <p>Plain number crunching (loops, math, recursion, dynamic programming) is mostly a dead heat. The largest gaps appear in library-heavy work: regular expressions, JSON, string handling, memory allocation and task switching. Those depend on which libraries each language ships, not on how well the compiler optimizes a loop.</p>
+  </section>
+
+  <section class="sec" aria-labelledby="h-chart">
+    <h2 id="h-chart">How far apart, test by test</h2>
+    <div class="chart">
+      <div class="legend"><span><span class="sw c"></span>Crystal faster</span><span><span class="sw g"></span>Go faster</span><span><span class="sw t"></span>Within 10%</span></div>
+      <div class="axisrow"><div class="lab"></div><div class="ax" aria-hidden="true"><span class="tick" style="left:0.00%">4× Go</span><span class="tick" style="left:16.67%">2×</span><span class="tick" style="left:33.33%">equal</span><span class="tick" style="left:50.00%">2×</span><span class="tick" style="left:66.67%">4×</span><span class="tick" style="left:83.33%">8×</span><span class="tick" style="left:100.00%">16× Crystal</span></div></div>
+      <div class="cat">Compute</div><div class="row" title="Recursive Fibonacci: Crystal 218 ms, Go 272 ms"><div class="rl">Recursive Fibonacci</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-c" style="left:33.33%;width:5.34%"></b><span class="val" style="left:39.67%">1.2× Crystal</span></div></div><div class="row" title="Collatz chains: Crystal 596 ms, Go 615 ms"><div class="rl">Collatz chains</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-t" style="left:33.33%;width:0.76%"></b><span class="val" style="left:35.10%">within noise</span></div></div><div class="row" title="Sieve of Eratosthenes: Crystal 122 ms, Go 101 ms"><div class="rl">Sieve of Eratosthenes</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-g" style="left:28.71%;width:4.63%"></b><span class="val" style="left:27.71%;transform:translateX(-100%)">1.2× Go</span></div></div><div class="row" title="Mandelbrot: Crystal 106 ms, Go 99.4 ms"><div class="rl">Mandelbrot</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-t" style="left:31.82%;width:1.51%"></b><span class="val" style="left:30.82%;transform:translateX(-100%)">within noise</span></div></div><div class="row" title="N-body simulation: Crystal 294 ms, Go 189 ms"><div class="rl">N-body simulation</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-g" style="left:22.78%;width:10.55%"></b><span class="val" style="left:21.78%;transform:translateX(-100%)">1.6× Go</span></div></div><div class="row" title="Matrix multiply: Crystal 66.7 ms, Go 63.2 ms"><div class="rl">Matrix multiply</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-t" style="left:32.04%;width:1.30%"></b><span class="val" style="left:31.04%;transform:translateX(-100%)">within noise</span></div></div><div class="row" title="N-Queens (n=14): Crystal 265 ms, Go 271 ms"><div class="rl">N-Queens (n=14)</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-t" style="left:33.33%;width:0.56%"></b><span class="val" style="left:34.90%">within noise</span></div></div><div class="row" title="Longest common subsequence: Crystal 300 ms, Go 287 ms"><div class="rl">Longest common subsequence</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-t" style="left:32.28%;width:1.06%"></b><span class="val" style="left:31.28%;transform:translateX(-100%)">within noise</span></div></div><div class="cat">Data structures</div><div class="row" title="Binary trees: Crystal 571 ms, Go 803 ms"><div class="rl">Binary trees</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-c" style="left:33.33%;width:8.19%"></b><span class="val" style="left:42.52%">1.4× Crystal</span></div></div><div class="row" title="Sort 2M integers: Crystal 264 ms, Go 232 ms"><div class="rl">Sort 2M integers</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-g" style="left:30.16%;width:3.17%"></b><span class="val" style="left:29.16%;transform:translateX(-100%)">1.1× Go</span></div></div><div class="row" title="Hash map (int keys): Crystal 221 ms, Go 271 ms"><div class="rl">Hash map (int keys)</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-c" style="left:33.33%;width:4.90%"></b><span class="val" style="left:39.23%">1.2× Crystal</span></div></div><div class="row" title="Hash map (string keys): Crystal 98.2 ms, Go 77.1 ms"><div class="rl">Hash map (string keys)</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-g" style="left:27.51%;width:5.82%"></b><span class="val" style="left:26.51%;transform:translateX(-100%)">1.3× Go</span></div></div><div class="cat">Strings &amp; regex</div><div class="row" title="String building &amp; split: Crystal 128 ms, Go 220 ms"><div class="rl">String building &amp; split</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-c" style="left:33.33%;width:12.93%"></b><span class="val" style="left:47.27%">1.7× Crystal</span></div></div><div class="row" title="Regular expressions: Crystal 63.0 ms, Go 846 ms"><div class="rl">Regular expressions</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-c" style="left:33.33%;width:62.46%"></b><span class="val" style="left:78.00%">13.4× Crystal</span></div></div><div class="cat">JSON</div><div class="row" title="JSON parse (dynamic): Crystal 109 ms, Go 180 ms"><div class="rl">JSON parse (dynamic)</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-c" style="left:33.33%;width:12.06%"></b><span class="val" style="left:46.39%">1.7× Crystal</span></div></div><div class="row" title="JSON parse (typed): Crystal 74.7 ms, Go 188 ms"><div class="rl">JSON parse (typed)</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-c" style="left:33.33%;width:22.21%"></b><span class="val" style="left:56.54%">2.5× Crystal</span></div></div><div class="row" title="JSON serialize: Crystal 49.2 ms, Go 32.2 ms"><div class="rl">JSON serialize</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-g" style="left:23.13%;width:10.21%"></b><span class="val" style="left:22.13%;transform:translateX(-100%)">1.5× Go</span></div></div><div class="cat">Crypto</div><div class="row" title="SHA-256: Crystal 102 ms, Go 103 ms"><div class="rl">SHA-256</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-t" style="left:33.33%;width:0.43%"></b><span class="val" style="left:34.76%">within noise</span></div></div><div class="cat">Concurrency</div><div class="row" title="Channel ping-pong: Crystal 29.3 ms, Go 136 ms"><div class="rl">Channel ping-pong</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-c" style="left:33.33%;width:36.83%"></b><span class="val" style="left:71.17%">4.6× Crystal</span></div></div><div class="row" title="Spawn 100k tasks: Crystal 28.1 ms, Go 53.7 ms"><div class="rl">Spawn 100k tasks</div><div class="track"><i class="gl" style="left:0.00%"></i><i class="gl" style="left:16.67%"></i><i class="gl gl0" style="left:33.33%"></i><i class="gl" style="left:50.00%"></i><i class="gl" style="left:66.67%"></i><i class="gl" style="left:83.33%"></i><i class="gl" style="left:100.00%"></i><b class="bar-c" style="left:33.33%;width:15.58%"></b><span class="val" style="left:49.91%">1.9× Crystal</span></div></div>
+      <p class="note">Bars show median time ratio on a log scale, so a 4× lead on either side is drawn the same length. Hover a row for the raw milliseconds.</p>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-table">
+    <h2 id="h-table">All the numbers</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th scope="col">Test</th>
+          <th scope="col" class="n">Crystal ms</th>
+          <th scope="col" class="n">Go ms</th>
+          <th scope="col" class="n" title="Go limited to one OS thread, like Crystal's default">Go 1 thread ms</th>
+          <th scope="col" class="n">Result</th>
+          <th scope="col" class="n">Crystal MB</th>
+          <th scope="col" class="n">Go MB</th>
+          <th scope="col" class="n" title="Standard deviation of the timed runs as a share of the median">Spread</th>
+        </tr></thead>
+        <tbody><tr class="catrow"><th colspan="8" scope="colgroup">Compute</th></tr><tr><th scope="row"><span class="t">Recursive Fibonacci</span><span class="d">fib(38): ~126M function calls, pure integer recursion</span></th><td class="n win">218</td><td class="n ">272</td><td class="n dim">263</td><td class="n"><span class="pill p-crystal">Crystal</span> 1.2×</td><td class="n">5</td><td class="n">3</td><td class="n dim">±7% / ±3%</td></tr><tr><th scope="row"><span class="t">Collatz chains</span><span class="d">Longest Collatz chain for every start below 2M (tight integer loop)</span></th><td class="n ">596</td><td class="n ">615</td><td class="n dim">693</td><td class="n"><span class="pill p-tie">Tie</span> </td><td class="n">5</td><td class="n">3</td><td class="n dim">±2% / ±5%</td></tr><tr><th scope="row"><span class="t">Sieve of Eratosthenes</span><span class="d">Primes below 20M in a 20 MB boolean array</span></th><td class="n ">122</td><td class="n win">101</td><td class="n dim">94.9</td><td class="n"><span class="pill p-go">Go</span> 1.2×</td><td class="n">43</td><td class="n">42</td><td class="n dim">±6% / ±3%</td></tr><tr><th scope="row"><span class="t">Mandelbrot</span><span class="d">1000x1000 grid, 100 iterations, float64 math</span></th><td class="n ">106</td><td class="n ">99.4</td><td class="n dim">98.8</td><td class="n"><span class="pill p-tie">Tie</span> </td><td class="n">5</td><td class="n">3</td><td class="n dim">±6% / ±2%</td></tr><tr><th scope="row"><span class="t">N-body simulation</span><span class="d">5 bodies, 3M steps, float64 math + sqrt</span></th><td class="n ">294</td><td class="n win">189</td><td class="n dim">197</td><td class="n"><span class="pill p-go">Go</span> 1.6×</td><td class="n">5</td><td class="n">3</td><td class="n dim">±15% / ±12%</td></tr><tr><th scope="row"><span class="t">Matrix multiply</span><span class="d">400x400 float64, naive triple loop on flat arrays</span></th><td class="n ">66.7</td><td class="n ">63.2</td><td class="n dim">59.7</td><td class="n"><span class="pill p-tie">Tie</span> </td><td class="n">12</td><td class="n">12</td><td class="n dim">±4% / ±26%</td></tr><tr><th scope="row"><span class="t">N-Queens (n=14)</span><span class="d">Bitmask backtracking, 365,596 solutions</span></th><td class="n ">265</td><td class="n ">271</td><td class="n dim">249</td><td class="n"><span class="pill p-tie">Tie</span> </td><td class="n">5</td><td class="n">3</td><td class="n dim">±5% / ±2%</td></tr><tr><th scope="row"><span class="t">Longest common subsequence</span><span class="d">Dynamic programming on two 8000-char strings (64M cells)</span></th><td class="n ">300</td><td class="n ">287</td><td class="n dim">282</td><td class="n"><span class="pill p-tie">Tie</span> </td><td class="n">5</td><td class="n">3</td><td class="n dim">±6% / ±1%</td></tr><tr class="catrow"><th colspan="8" scope="colgroup">Data structures</th></tr><tr><th scope="row"><span class="t">Binary trees</span><span class="d">Allocate/walk/discard ~17M tree nodes (GC stress)</span></th><td class="n win">571</td><td class="n ">803</td><td class="n dim">1,163</td><td class="n"><span class="pill p-crystal">Crystal</span> 1.4×</td><td class="n">26</td><td class="n">23</td><td class="n dim">±14% / ±7%</td></tr><tr><th scope="row"><span class="t">Sort 2M integers</span><span class="d">Standard-library sort on 2M pseudo-random Int64</span></th><td class="n ">264</td><td class="n win">232</td><td class="n dim">231</td><td class="n"><span class="pill p-go">Go</span> 1.1×</td><td class="n">44</td><td class="n">65</td><td class="n dim">±9% / ±9%</td></tr><tr><th scope="row"><span class="t">Hash map (int keys)</span><span class="d">1M inserts, 2M lookups, 1M deletes</span></th><td class="n win">221</td><td class="n ">271</td><td class="n dim">270</td><td class="n"><span class="pill p-crystal">Crystal</span> 1.2×</td><td class="n">90</td><td class="n">39</td><td class="n dim">±4% / ±9%</td></tr><tr><th scope="row"><span class="t">Hash map (string keys)</span><span class="d">500k word-count updates over 50k distinct string keys</span></th><td class="n ">98.2</td><td class="n win">77.1</td><td class="n dim">75.9</td><td class="n"><span class="pill p-go">Go</span> 1.3×</td><td class="n">13</td><td class="n">10</td><td class="n dim">±1% / ±4%</td></tr><tr class="catrow"><th colspan="8" scope="colgroup">Strings &amp; regex</th></tr><tr><th scope="row"><span class="t">String building &amp; split</span><span class="d">Build a ~25 MB string, scan every byte, split on commas</span></th><td class="n win">128</td><td class="n ">220</td><td class="n dim">227</td><td class="n"><span class="pill p-crystal">Crystal</span> 1.7×</td><td class="n">194</td><td class="n">116</td><td class="n dim">±10% / ±12%</td></tr><tr><th scope="row"><span class="t">Regular expressions</span><span class="d">Two regexes over a 15 MB, 200k-line log (match + capture)</span></th><td class="n win">63.0</td><td class="n ">846</td><td class="n dim">813</td><td class="n"><span class="pill p-crystal">Crystal</span> 13.4×</td><td class="n">65</td><td class="n">61</td><td class="n dim">±8% / ±8%</td></tr><tr class="catrow"><th colspan="8" scope="colgroup">JSON</th></tr><tr><th scope="row"><span class="t">JSON parse (dynamic)</span><span class="d">Parse 7 MB / 50k objects into generic values, then walk them</span></th><td class="n win">109</td><td class="n ">180</td><td class="n dim">177</td><td class="n"><span class="pill p-crystal">Crystal</span> 1.7×</td><td class="n">86</td><td class="n">112</td><td class="n dim">±16% / ±9%</td></tr><tr><th scope="row"><span class="t">JSON parse (typed)</span><span class="d">Parse the same document straight into typed structs/classes</span></th><td class="n win">74.7</td><td class="n ">188</td><td class="n dim">162</td><td class="n"><span class="pill p-crystal">Crystal</span> 2.5×</td><td class="n">48</td><td class="n">48</td><td class="n dim">±8% / ±12%</td></tr><tr><th scope="row"><span class="t">JSON serialize</span><span class="d">Serialize 50k typed objects back to JSON text</span></th><td class="n ">49.2</td><td class="n win">32.2</td><td class="n dim">30.1</td><td class="n"><span class="pill p-go">Go</span> 1.5×</td><td class="n">82</td><td class="n">69</td><td class="n dim">±6% / ±45%</td></tr><tr class="catrow"><th colspan="8" scope="colgroup">Crypto</th></tr><tr><th scope="row"><span class="t">SHA-256</span><span class="d">Hash a 32 MB buffer 4 times</span></th><td class="n ">102</td><td class="n ">103</td><td class="n dim">105</td><td class="n"><span class="pill p-tie">Tie</span> </td><td class="n">39</td><td class="n">35</td><td class="n dim">±1% / ±2%</td></tr><tr class="catrow"><th colspan="8" scope="colgroup">Concurrency</th></tr><tr><th scope="row"><span class="t">Channel ping-pong</span><span class="d">300k unbuffered round trips between two goroutines/fibers</span></th><td class="n win">29.3</td><td class="n ">136</td><td class="n dim">141</td><td class="n"><span class="pill p-crystal">Crystal</span> 4.6×</td><td class="n">5</td><td class="n">3</td><td class="n dim">±1% / ±5%</td></tr><tr><th scope="row"><span class="t">Spawn 100k tasks</span><span class="d">Spawn 100k goroutines/fibers that each send a value over a channel</span></th><td class="n win">28.1</td><td class="n ">53.7</td><td class="n dim">55.5</td><td class="n"><span class="pill p-crystal">Crystal</span> 1.9×</td><td class="n">11</td><td class="n">10</td><td class="n dim">±1% / ±7%</td></tr></tbody>
+      </table>
+    </div>
+    <p class="note">Time is the median of 7 timed runs after one warm-up run. Memory is peak resident size of the whole process. The JSON, regex and SHA-256 tests include the cost of holding their input data in memory. "Go 1 thread" repeats the Go run with <code>GOMAXPROCS=1</code>, since Crystal runs on one thread unless built with the multithreading preview.</p>
+  </section>
+
+  <section class="sec" aria-labelledby="h-read">
+    <h2 id="h-read">What the groups tell you</h2>
+    <div class="cols">
+      <div><h3>Compute</h3><p>Both compilers turn simple loops into very similar machine code, so five of the eight tests land within 10%. Crystal checks integer overflow on every <code>+</code> and <code>*</code> and still keeps pace. Go is ahead on the float-heavy N-body simulation and the sieve. Crystal is ahead on recursive Fibonacci.</p></div>
+      <div><h3>Data structures</h3><p>The binary-trees test allocates millions of small objects. Crystal finished 1.4× sooner than Go, and Go got slower still when limited to one thread, most likely because its garbage collector normally uses the second core. Hash maps split by key type: Crystal led with integer keys, Go led with string keys. Go sorted 2 million integers about 10% faster.</p></div>
+      <div><h3>Strings, regex, JSON</h3><p>The regex gap is the largest result here. Crystal calls PCRE2 with just-in-time compilation. Go's built-in engine guarantees linear-time matching, which costs speed on these patterns. Crystal also parses JSON into typed objects faster. Go serializes faster.</p></div>
+      <div><h3>Concurrency</h3><p>Crystal fibers switch cheaply on one thread. Go goroutines can run in parallel, which pays off for CPU-bound work that this test set does not include. For message passing and spawning tasks, Crystal was faster here.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h-caveats">
+    <h2 id="h-caveats">Read these before quoting the numbers</h2>
+    <div class="cols">
+      <div><h3>Crystal is an older version</h3><p>Ubuntu's package provides Crystal 1.11.2, from April 2024. Go is 1.24.7. A current Crystal release may do better.</p></div>
+      <div><h3>Idiomatic code, not hand-tuned</h3><p>Each program uses normal standard-library calls in its language. Neither side uses unsafe indexing or custom allocators. Experts could squeeze either one further.</p></div>
+      <div><h3>One small machine</h3><p>A shared 2-core cloud VM. Treat gaps under 10% as noise and re-run on your own hardware before deciding anything.</p></div>
+      <div><h3>Not covered</h3><p>Compile time, binary size, startup time, multi-core scaling, network and disk I/O, and developer productivity. Crystal's release build of this program took about 15 seconds. Build time was not measured for Go.</p></div>
+    </div>
+    <p>One surprise from the work itself: in Crystal, <code>3 * n</code> with an <code>Int64</code> <code>n</code> is computed as a 32-bit integer and overflows, so the Collatz test had to be written <code>n * 3</code>. It crashed with an overflow error until fixed. That is also why every test compares a checksum across languages before any timing counts.</p>
+  </section>
+
+  <section class="sec" aria-labelledby="h-setup">
+    <h2 id="h-setup">Setup and source</h2>
+    <dl>
+      <dt>Machine</dt><dd>Intel(R) Xeon(R) Processor @ 2.10GHz, 2 cores, 8 GB RAM</dd>
+      <dt>System</dt><dd>Ubuntu 24.04.5 LTS</dd>
+      <dt>Go</dt><dd>go1.24.7 linux/amd64, <code>go build</code> defaults</dd>
+      <dt>Crystal</dt><dd>Crystal 1.11.2 (2024-04-01), <code>crystal build --release --no-debug</code></dd>
+      <dt>Method</dt><dd>One process per test and language. One warm-up run, then 7 timed runs inside the process. Checksums matched in all 20 tests.</dd>
+    </dl>
+    <details><summary>Go source (main.go)</summary><pre><code>package main
+
+import (
+	&quot;crypto/sha256&quot;
+	&quot;encoding/json&quot;
+	&quot;fmt&quot;
+	&quot;math&quot;
+	&quot;os&quot;
+	&quot;regexp&quot;
+	&quot;slices&quot;
+	&quot;strconv&quot;
+	&quot;strings&quot;
+	&quot;time&quot;
+)
+
+const lcgA uint64 = 6364136223846793005
+const lcgC uint64 = 1442695040888963407
+
+// ---------------------------------------------------------------- compute
+
+func fib(n int) int {
+	if n &lt; 2 {
+		return n
+	}
+	return fib(n-1) + fib(n-2)
+}
+
+func benchFib() int64 { return int64(fib(38)) }
+
+func benchCollatz() int64 {
+	const limit = 2_000_000
+	var bestI, bestLen int64
+	for i := int64(1); i &lt; limit; i++ {
+		n := i
+		steps := int64(0)
+		for n != 1 {
+			if n&amp;1 == 0 {
+				n &gt;&gt;= 1
+			} else {
+				n = 3*n + 1
+			}
+			steps++
+		}
+		if steps &gt; bestLen {
+			bestLen = steps
+			bestI = i
+		}
+	}
+	return bestI*1000 + bestLen
+}
+
+func benchSieve() int64 {
+	const n = 20_000_000
+	sieve := make([]bool, n+1)
+	for i := range sieve {
+		sieve[i] = true
+	}
+	sieve[0], sieve[1] = false, false
+	for i := 2; i*i &lt;= n; i++ {
+		if sieve[i] {
+			for j := i * i; j &lt;= n; j += i {
+				sieve[j] = false
+			}
+		}
+	}
+	var count int64
+	for _, p := range sieve {
+		if p {
+			count++
+		}
+	}
+	return count
+}
+
+func benchMandelbrot() int64 {
+	const size = 1000
+	const maxIter = 100
+	var inside int64
+	for py := 0; py &lt; size; py++ {
+		ci := 2.0*float64(py)/size - 1.0
+		for px := 0; px &lt; size; px++ {
+			cr := 3.0*float64(px)/size - 2.0
+			zr, zi := 0.0, 0.0
+			i := 0
+			for ; i &lt; maxIter &amp;&amp; zr*zr+zi*zi &lt;= 4.0; i++ {
+				zr, zi = zr*zr-zi*zi+cr, 2.0*zr*zi+ci
+			}
+			if i == maxIter {
+				inside++
+			}
+		}
+	}
+	return inside
+}
+
+func advance(dt float64, x, y, z, vx, vy, vz, m []float64) {
+	n := len(x)
+	for i := 0; i &lt; n; i++ {
+		for j := i + 1; j &lt; n; j++ {
+			dx := x[i] - x[j]
+			dy := y[i] - y[j]
+			dz := z[i] - z[j]
+			d2 := dx*dx + dy*dy + dz*dz
+			mag := dt / (d2 * math.Sqrt(d2))
+			vx[i] -= dx * m[j] * mag
+			vy[i] -= dy * m[j] * mag
+			vz[i] -= dz * m[j] * mag
+			vx[j] += dx * m[i] * mag
+			vy[j] += dy * m[i] * mag
+			vz[j] += dz * m[i] * mag
+		}
+	}
+	for i := 0; i &lt; n; i++ {
+		x[i] += dt * vx[i]
+		y[i] += dt * vy[i]
+		z[i] += dt * vz[i]
+	}
+}
+
+func energy(x, y, z, vx, vy, vz, m []float64) float64 {
+	e := 0.0
+	n := len(x)
+	for i := 0; i &lt; n; i++ {
+		e += 0.5 * m[i] * (vx[i]*vx[i] + vy[i]*vy[i] + vz[i]*vz[i])
+		for j := i + 1; j &lt; n; j++ {
+			dx := x[i] - x[j]
+			dy := y[i] - y[j]
+			dz := z[i] - z[j]
+			e -= m[i] * m[j] / math.Sqrt(dx*dx+dy*dy+dz*dz)
+		}
+	}
+	return e
+}
+
+func benchNbody() int64 {
+	const pi = 3.141592653589793
+	const solarMass = 4 * pi * pi
+	const dpy = 365.24
+	x := []float64{0, 4.84143144246472090e+00, 8.34336671824457987e+00, 1.28943695621391310e+01, 1.53796971148509165e+01}
+	y := []float64{0, -1.16032004402742839e+00, 4.12479856412430479e+00, -1.51111514016986312e+01, -2.59193146099879641e+01}
+	z := []float64{0, -1.03622044471123109e-01, -4.03523417114321381e-01, -2.23307578892655734e-01, 1.79258772950371181e-01}
+	vx := []float64{0, 1.66007664274403694e-03 * dpy, -2.76742510726862411e-03 * dpy, 2.96460137564761618e-03 * dpy, 2.68067772490389322e-03 * dpy}
+	vy := []float64{0, 7.69901118419740425e-03 * dpy, 4.99852801234917238e-03 * dpy, 2.37847173959480950e-03 * dpy, 1.62824170038242295e-03 * dpy}
+	vz := []float64{0, -6.90460016972063023e-05 * dpy, 2.30417297573763929e-05 * dpy, -2.96589568540237556e-05 * dpy, -9.51592254519715870e-05 * dpy}
+	m := []float64{solarMass, 9.54791938424326609e-04 * solarMass, 2.85885980666130812e-04 * solarMass, 4.36624404335156298e-05 * solarMass, 5.15138902046611451e-05 * solarMass}
+
+	px, py, pz := 0.0, 0.0, 0.0
+	for i := range m {
+		px += vx[i] * m[i]
+		py += vy[i] * m[i]
+		pz += vz[i] * m[i]
+	}
+	vx[0] = -px / solarMass
+	vy[0] = -py / solarMass
+	vz[0] = -pz / solarMass
+
+	for s := 0; s &lt; 3_000_000; s++ {
+		advance(0.01, x, y, z, vx, vy, vz, m)
+	}
+	return int64(math.Round(energy(x, y, z, vx, vy, vz, m) * 1e9))
+}
+
+func benchMatmul() int64 {
+	const n = 400
+	a := make([]float64, n*n)
+	b := make([]float64, n*n)
+	c := make([]float64, n*n)
+	for i := 0; i &lt; n; i++ {
+		for j := 0; j &lt; n; j++ {
+			a[i*n+j] = float64((i + j) % 10)
+			b[i*n+j] = float64((i * j) % 10)
+		}
+	}
+	for i := 0; i &lt; n; i++ {
+		for j := 0; j &lt; n; j++ {
+			s := 0.0
+			for k := 0; k &lt; n; k++ {
+				s += a[i*n+k] * b[k*n+j]
+			}
+			c[i*n+j] = s
+		}
+	}
+	total := 0.0
+	for _, v := range c {
+		total += v
+	}
+	return int64(total)
+}
+
+func queens(n int, all, cols, d1, d2 int64) int64 {
+	if cols == all {
+		return 1
+	}
+	var count int64
+	avail := all &amp;^ (cols | d1 | d2)
+	for avail != 0 {
+		bit := avail &amp; -avail
+		avail ^= bit
+		count += queens(n, all, cols|bit, ((d1|bit)&lt;&lt;1)&amp;all, (d2|bit)&gt;&gt;1)
+	}
+	return count
+}
+
+func benchNqueens() int64 {
+	const n = 14
+	return queens(n, (int64(1)&lt;&lt;n)-1, 0, 0, 0)
+}
+
+func benchLCS() int64 {
+	const n = 8000
+	a := make([]byte, n)
+	b := make([]byte, n)
+	x := uint64(12345)
+	for i := range a {
+		x = x*lcgA + lcgC
+		a[i] = &#x27;A&#x27; + byte((x&gt;&gt;33)&amp;3)
+	}
+	for i := range b {
+		x = x*lcgA + lcgC
+		b[i] = &#x27;A&#x27; + byte((x&gt;&gt;33)&amp;3)
+	}
+	prev := make([]int32, n+1)
+	cur := make([]int32, n+1)
+	for i := 1; i &lt;= n; i++ {
+		ai := a[i-1]
+		for j := 1; j &lt;= n; j++ {
+			if ai == b[j-1] {
+				cur[j] = prev[j-1] + 1
+			} else if prev[j] &gt;= cur[j-1] {
+				cur[j] = prev[j]
+			} else {
+				cur[j] = cur[j-1]
+			}
+		}
+		prev, cur = cur, prev
+	}
+	return int64(prev[n])
+}
+
+// ---------------------------------------------------------------- data structures
+
+type Node struct{ l, r *Node }
+
+func bottomUp(d int) *Node {
+	if d &lt;= 0 {
+		return &amp;Node{}
+	}
+	return &amp;Node{bottomUp(d - 1), bottomUp(d - 1)}
+}
+
+func (n *Node) check() int64 {
+	if n.l == nil {
+		return 1
+	}
+	return 1 + n.l.check() + n.r.check()
+}
+
+func benchBinaryTrees() int64 {
+	const maxDepth = 17
+	total := bottomUp(maxDepth + 1).check()
+	long := bottomUp(maxDepth)
+	for d := 4; d &lt;= maxDepth; d += 4 {
+		iters := 1 &lt;&lt; (maxDepth - d + 4)
+		var c int64
+		for i := 0; i &lt; iters; i++ {
+			c += bottomUp(d).check()
+		}
+		total += c
+	}
+	total += long.check()
+	return total
+}
+
+func benchSort() int64 {
+	const n = 2_000_000
+	a := make([]int64, n)
+	x := uint64(42)
+	for i := range a {
+		x = x*lcgA + lcgC
+		a[i] = int64(x &gt;&gt; 33)
+	}
+	slices.Sort(a)
+	s := a[0] + a[n/2] + a[n-1]
+	for i := 0; i &lt; n; i += 10007 {
+		s += a[i]
+	}
+	return s
+}
+
+func benchHashInt() int64 {
+	m := make(map[int64]int64)
+	x := uint64(7)
+	for i := int64(0); i &lt; 1_000_000; i++ {
+		x = x*lcgA + lcgC
+		m[int64(x&gt;&gt;33)%2_000_000] = i
+	}
+	var sum int64
+	for i := int64(0); i &lt; 2_000_000; i++ {
+		if v, ok := m[i]; ok {
+			sum += v
+		}
+	}
+	for i := int64(0); i &lt; 2_000_000; i += 2 {
+		delete(m, i)
+	}
+	return sum*7 + int64(len(m))
+}
+
+func benchHashString() int64 {
+	m := make(map[string]int64)
+	x := uint64(99)
+	for i := 0; i &lt; 500_000; i++ {
+		x = x*lcgA + lcgC
+		id := (x &gt;&gt; 33) % 50_000
+		m[&quot;word&quot;+strconv.FormatUint(id, 10)]++
+	}
+	var maxc int64
+	for _, c := range m {
+		if c &gt; maxc {
+			maxc = c
+		}
+	}
+	return int64(len(m))*1000 + maxc
+}
+
+// ---------------------------------------------------------------- strings / regex
+
+func benchStringBuilder() int64 {
+	var sb strings.Builder
+	for i := 0; i &lt; 2_000_000; i++ {
+		sb.WriteString(&quot;item&quot;)
+		sb.WriteString(strconv.Itoa(i))
+		sb.WriteByte(&#x27;,&#x27;)
+	}
+	s := sb.String()
+	var count7 int64
+	for i := 0; i &lt; len(s); i++ {
+		if s[i] == &#x27;7&#x27; {
+			count7++
+		}
+	}
+	var pieces, pieceLen int64
+	for _, p := range strings.Split(s, &quot;,&quot;) {
+		if len(p) &gt; 0 {
+			pieces++
+			pieceLen += int64(len(p))
+		}
+	}
+	return int64(len(s)) + count7*3 + pieces*7 + pieceLen
+}
+
+var logText string
+var reEmail = regexp.MustCompile(`[a-z]+[0-9]+@[a-z]+[0-9]+\.example\.com`)
+var reStatus = regexp.MustCompile(`status=([0-9]{3})`)
+
+func getLogText() string {
+	if logText == &quot;&quot; {
+		statuses := [4]int{200, 404, 500, 301}
+		var sb strings.Builder
+		for i := 0; i &lt; 200_000; i++ {
+			st := strconv.Itoa(statuses[i%4])
+			if i%10 == 0 {
+				sb.WriteString(&quot;noise line &quot; + strconv.Itoa(i) + &quot; status=&quot; + st + &quot;\n&quot;)
+			} else {
+				sb.WriteString(&quot;user&quot; + strconv.Itoa(i) + &quot;@host&quot; + strconv.Itoa(i%100) + &quot;.example.com visited /path/&quot; + strconv.Itoa(i) + &quot; status=&quot; + st + &quot;\n&quot;)
+			}
+		}
+		logText = sb.String()
+	}
+	return logText
+}
+
+func benchRegex() int64 {
+	text := getLogText()
+	emails := int64(len(reEmail.FindAllStringIndex(text, -1)))
+	var statusSum int64
+	for _, m := range reStatus.FindAllStringSubmatch(text, -1) {
+		v, _ := strconv.Atoi(m[1])
+		statusSum += int64(v)
+	}
+	return emails*1_000_003 + statusSum
+}
+
+// ---------------------------------------------------------------- JSON
+
+type Address struct {
+	City string `json:&quot;city&quot;`
+	Zip  string `json:&quot;zip&quot;`
+}
+
+type Person struct {
+	ID      int64    `json:&quot;id&quot;`
+	Name    string   `json:&quot;name&quot;`
+	Email   string   `json:&quot;email&quot;`
+	Active  bool     `json:&quot;active&quot;`
+	Score   float64  `json:&quot;score&quot;`
+	Tags    []string `json:&quot;tags&quot;`
+	Address Address  `json:&quot;address&quot;`
+}
+
+var jsonBytes []byte
+var people []Person
+
+func getJSON() []byte {
+	if jsonBytes == nil {
+		var sb strings.Builder
+		sb.WriteByte(&#x27;[&#x27;)
+		for i := 0; i &lt; 50_000; i++ {
+			if i &gt; 0 {
+				sb.WriteByte(&#x27;,&#x27;)
+			}
+			cents := (i * 37 % 10000) | 1
+			active := &quot;true&quot;
+			if i%3 == 0 {
+				active = &quot;false&quot;
+			}
+			is := strconv.Itoa(i)
+			sb.WriteString(`{&quot;id&quot;:` + is + `,&quot;name&quot;:&quot;user` + is + `&quot;,&quot;email&quot;:&quot;user` + is + `@example.com&quot;,&quot;active&quot;:` + active)
+			sb.WriteString(fmt.Sprintf(`,&quot;score&quot;:%d.%02d`, cents/100, cents%100))
+			sb.WriteString(`,&quot;tags&quot;:[&quot;t` + strconv.Itoa(i%7) + `&quot;,&quot;t` + strconv.Itoa(i%11) + `&quot;,&quot;t` + strconv.Itoa(i%13) + `&quot;]`)
+			sb.WriteString(`,&quot;address&quot;:{&quot;city&quot;:&quot;City` + strconv.Itoa(i%100) + `&quot;,&quot;zip&quot;:&quot;` + strconv.Itoa(10000+i%90000) + `&quot;}}`)
+		}
+		sb.WriteByte(&#x27;]&#x27;)
+		jsonBytes = []byte(sb.String())
+	}
+	return jsonBytes
+}
+
+func getPeople() []Person {
+	if people == nil {
+		if err := json.Unmarshal(getJSON(), &amp;people); err != nil {
+			panic(err)
+		}
+	}
+	return people
+}
+
+func benchJSONDynamic() int64 {
+	var v []any
+	if err := json.Unmarshal(getJSON(), &amp;v); err != nil {
+		panic(err)
+	}
+	var sumID, active, tags, city int64
+	score := 0.0
+	for _, e := range v {
+		o := e.(map[string]any)
+		sumID += int64(o[&quot;id&quot;].(float64))
+		if o[&quot;active&quot;].(bool) {
+			active++
+		}
+		tags += int64(len(o[&quot;tags&quot;].([]any)))
+		score += o[&quot;score&quot;].(float64)
+		city += int64(len(o[&quot;address&quot;].(map[string]any)[&quot;city&quot;].(string)))
+	}
+	return sumID + active*3 + tags*7 + city*11 + int64(math.Round(score*100))
+}
+
+func benchJSONTyped() int64 {
+	var ps []Person
+	if err := json.Unmarshal(getJSON(), &amp;ps); err != nil {
+		panic(err)
+	}
+	var sumID, active, tags, city int64
+	score := 0.0
+	for i := range ps {
+		p := &amp;ps[i]
+		sumID += p.ID
+		if p.Active {
+			active++
+		}
+		tags += int64(len(p.Tags))
+		score += p.Score
+		city += int64(len(p.Address.City))
+	}
+	return sumID + active*3 + tags*7 + city*11 + int64(math.Round(score*100))
+}
+
+func benchJSONSerialize() int64 {
+	b, err := json.Marshal(getPeople())
+	if err != nil {
+		panic(err)
+	}
+	return int64(len(b))
+}
+
+// ---------------------------------------------------------------- crypto
+
+var shaBuf []byte
+
+func benchSHA256() int64 {
+	if shaBuf == nil {
+		shaBuf = make([]byte, 32*1024*1024)
+		x := uint64(2024)
+		for i := range shaBuf {
+			x = x*lcgA + lcgC
+			shaBuf[i] = byte(x &gt;&gt; 56)
+		}
+	}
+	var acc int64
+	for r := 0; r &lt; 4; r++ {
+		shaBuf[0] = byte(r)
+		d := sha256.Sum256(shaBuf)
+		acc = (acc*31 + int64(d[0])*65536 + int64(d[1])*256 + int64(d[2])) % 1_000_000_007
+	}
+	return acc
+}
+
+// ---------------------------------------------------------------- concurrency
+
+func benchChanPingPong() int64 {
+	a := make(chan int64)
+	b := make(chan int64)
+	go func() {
+		for v := range a {
+			b &lt;- v + 1
+		}
+		close(b)
+	}()
+	var s int64
+	for i := int64(0); i &lt; 300_000; i++ {
+		a &lt;- i
+		s += &lt;-b
+	}
+	close(a)
+	return s
+}
+
+func benchSpawnSum() int64 {
+	res := make(chan int64, 1000)
+	var sum int64
+	for batch := 0; batch &lt; 100; batch++ {
+		for k := 0; k &lt; 1000; k++ {
+			i := int64(batch*1000 + k)
+			go func() { res &lt;- i * 2 }()
+		}
+		for k := 0; k &lt; 1000; k++ {
+			sum += &lt;-res
+		}
+	}
+	return sum
+}
+
+// ---------------------------------------------------------------- driver
+
+func run(name string) int64 {
+	switch name {
+	case &quot;fib&quot;:
+		return benchFib()
+	case &quot;collatz&quot;:
+		return benchCollatz()
+	case &quot;sieve&quot;:
+		return benchSieve()
+	case &quot;mandelbrot&quot;:
+		return benchMandelbrot()
+	case &quot;nbody&quot;:
+		return benchNbody()
+	case &quot;matmul&quot;:
+		return benchMatmul()
+	case &quot;nqueens&quot;:
+		return benchNqueens()
+	case &quot;lcs&quot;:
+		return benchLCS()
+	case &quot;binarytrees&quot;:
+		return benchBinaryTrees()
+	case &quot;sort&quot;:
+		return benchSort()
+	case &quot;hash_int&quot;:
+		return benchHashInt()
+	case &quot;hash_string&quot;:
+		return benchHashString()
+	case &quot;string_builder&quot;:
+		return benchStringBuilder()
+	case &quot;regex&quot;:
+		return benchRegex()
+	case &quot;json_dynamic&quot;:
+		return benchJSONDynamic()
+	case &quot;json_typed&quot;:
+		return benchJSONTyped()
+	case &quot;json_serialize&quot;:
+		return benchJSONSerialize()
+	case &quot;sha256&quot;:
+		return benchSHA256()
+	case &quot;chan_pingpong&quot;:
+		return benchChanPingPong()
+	case &quot;spawn_sum&quot;:
+		return benchSpawnSum()
+	}
+	fmt.Fprintln(os.Stderr, &quot;unknown benchmark:&quot;, name)
+	os.Exit(2)
+	return 0
+}
+
+func main() {
+	if len(os.Args) &lt; 3 {
+		fmt.Fprintln(os.Stderr, &quot;usage: bench &lt;name&gt; &lt;reps&gt;&quot;)
+		os.Exit(2)
+	}
+	name := os.Args[1]
+	reps, _ := strconv.Atoi(os.Args[2])
+
+	expected := run(name) // warm-up run, also fixes the expected checksum
+	stable := true
+	times := make([]string, 0, reps)
+	for i := 0; i &lt; reps; i++ {
+		t0 := time.Now()
+		r := run(name)
+		el := float64(time.Since(t0).Microseconds()) / 1000.0
+		if r != expected {
+			stable = false
+		}
+		times = append(times, strconv.FormatFloat(el, &#x27;f&#x27;, 3, 64))
+	}
+	fmt.Printf(`{&quot;bench&quot;:&quot;%s&quot;,&quot;reps&quot;:%d,&quot;times_ms&quot;:[%s],&quot;checksum&quot;:%d,&quot;stable&quot;:%t}`+&quot;\n&quot;,
+		name, reps, strings.Join(times, &quot;,&quot;), expected, stable)
+}
+</code></pre></details>
+    <details><summary>Crystal source (bench.cr)</summary><pre><code>require &quot;json&quot;
+require &quot;digest/sha256&quot;
+
+LCG_A = 6364136223846793005_u64
+LCG_C = 1442695040888963407_u64
+
+# ---------------------------------------------------------------- compute
+
+def fib(n : Int64) : Int64
+  n &lt; 2 ? n : fib(n - 1) + fib(n - 2)
+end
+
+def bench_fib : Int64
+  fib(38_i64)
+end
+
+def bench_collatz : Int64
+  limit = 2_000_000_i64
+  best_i = 0_i64
+  best_len = 0_i64
+  i = 1_i64
+  while i &lt; limit
+    n = i
+    steps = 0_i64
+    while n != 1
+      if n &amp; 1 == 0
+        n &gt;&gt;= 1
+      else
+        n = n * 3 + 1
+      end
+      steps += 1
+    end
+    if steps &gt; best_len
+      best_len = steps
+      best_i = i
+    end
+    i += 1
+  end
+  best_i * 1000 + best_len
+end
+
+def bench_sieve : Int64
+  n = 20_000_000
+  sieve = Array(Bool).new(n + 1, true)
+  sieve[0] = false
+  sieve[1] = false
+  i = 2
+  while i * i &lt;= n
+    if sieve[i]
+      j = i * i
+      while j &lt;= n
+        sieve[j] = false
+        j += i
+      end
+    end
+    i += 1
+  end
+  count = 0_i64
+  sieve.each { |p| count += 1 if p }
+  count
+end
+
+def bench_mandelbrot : Int64
+  size = 1000
+  max_iter = 100
+  inside = 0_i64
+  size.times do |py|
+    ci = 2.0 * py / size - 1.0
+    size.times do |px|
+      cr = 3.0 * px / size - 2.0
+      zr = 0.0
+      zi = 0.0
+      i = 0
+      while i &lt; max_iter &amp;&amp; zr * zr + zi * zi &lt;= 4.0
+        zr, zi = zr * zr - zi * zi + cr, 2.0 * zr * zi + ci
+        i += 1
+      end
+      inside += 1 if i == max_iter
+    end
+  end
+  inside
+end
+
+def advance(dt : Float64, x : Array(Float64), y : Array(Float64), z : Array(Float64),
+            vx : Array(Float64), vy : Array(Float64), vz : Array(Float64), m : Array(Float64))
+  n = x.size
+  i = 0
+  while i &lt; n
+    j = i + 1
+    while j &lt; n
+      dx = x[i] - x[j]
+      dy = y[i] - y[j]
+      dz = z[i] - z[j]
+      d2 = dx * dx + dy * dy + dz * dz
+      mag = dt / (d2 * Math.sqrt(d2))
+      vx[i] -= dx * m[j] * mag
+      vy[i] -= dy * m[j] * mag
+      vz[i] -= dz * m[j] * mag
+      vx[j] += dx * m[i] * mag
+      vy[j] += dy * m[i] * mag
+      vz[j] += dz * m[i] * mag
+      j += 1
+    end
+    i += 1
+  end
+  i = 0
+  while i &lt; n
+    x[i] += dt * vx[i]
+    y[i] += dt * vy[i]
+    z[i] += dt * vz[i]
+    i += 1
+  end
+end
+
+def energy(x : Array(Float64), y : Array(Float64), z : Array(Float64),
+           vx : Array(Float64), vy : Array(Float64), vz : Array(Float64), m : Array(Float64)) : Float64
+  e = 0.0
+  n = x.size
+  i = 0
+  while i &lt; n
+    e += 0.5 * m[i] * (vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i])
+    j = i + 1
+    while j &lt; n
+      dx = x[i] - x[j]
+      dy = y[i] - y[j]
+      dz = z[i] - z[j]
+      e -= m[i] * m[j] / Math.sqrt(dx * dx + dy * dy + dz * dz)
+      j += 1
+    end
+    i += 1
+  end
+  e
+end
+
+def bench_nbody : Int64
+  pi = 3.141592653589793
+  solar_mass = 4 * pi * pi
+  dpy = 365.24
+  x = [0.0, 4.84143144246472090e+00, 8.34336671824457987e+00, 1.28943695621391310e+01, 1.53796971148509165e+01]
+  y = [0.0, -1.16032004402742839e+00, 4.12479856412430479e+00, -1.51111514016986312e+01, -2.59193146099879641e+01]
+  z = [0.0, -1.03622044471123109e-01, -4.03523417114321381e-01, -2.23307578892655734e-01, 1.79258772950371181e-01]
+  vx = [0.0, 1.66007664274403694e-03 * dpy, -2.76742510726862411e-03 * dpy, 2.96460137564761618e-03 * dpy, 2.68067772490389322e-03 * dpy]
+  vy = [0.0, 7.69901118419740425e-03 * dpy, 4.99852801234917238e-03 * dpy, 2.37847173959480950e-03 * dpy, 1.62824170038242295e-03 * dpy]
+  vz = [0.0, -6.90460016972063023e-05 * dpy, 2.30417297573763929e-05 * dpy, -2.96589568540237556e-05 * dpy, -9.51592254519715870e-05 * dpy]
+  m = [solar_mass, 9.54791938424326609e-04 * solar_mass, 2.85885980666130812e-04 * solar_mass, 4.36624404335156298e-05 * solar_mass, 5.15138902046611451e-05 * solar_mass]
+
+  px = 0.0
+  py = 0.0
+  pz = 0.0
+  m.size.times do |i|
+    px += vx[i] * m[i]
+    py += vy[i] * m[i]
+    pz += vz[i] * m[i]
+  end
+  vx[0] = -px / solar_mass
+  vy[0] = -py / solar_mass
+  vz[0] = -pz / solar_mass
+
+  3_000_000.times { advance(0.01, x, y, z, vx, vy, vz, m) }
+  (energy(x, y, z, vx, vy, vz, m) * 1e9).round_away.to_i64
+end
+
+def bench_matmul : Int64
+  n = 400
+  a = Array(Float64).new(n * n, 0.0)
+  b = Array(Float64).new(n * n, 0.0)
+  c = Array(Float64).new(n * n, 0.0)
+  n.times do |i|
+    n.times do |j|
+      a[i * n + j] = ((i + j) % 10).to_f
+      b[i * n + j] = ((i * j) % 10).to_f
+    end
+  end
+  n.times do |i|
+    n.times do |j|
+      s = 0.0
+      n.times do |k|
+        s += a[i * n + k] * b[k * n + j]
+      end
+      c[i * n + j] = s
+    end
+  end
+  total = 0.0
+  c.each { |v| total += v }
+  total.to_i64
+end
+
+def queens(n : Int32, all : Int64, cols : Int64, d1 : Int64, d2 : Int64) : Int64
+  return 1_i64 if cols == all
+  count = 0_i64
+  avail = all &amp; ~(cols | d1 | d2)
+  while avail != 0
+    bit = avail &amp; -avail
+    avail ^= bit
+    count += queens(n, all, cols | bit, ((d1 | bit) &lt;&lt; 1) &amp; all, (d2 | bit) &gt;&gt; 1)
+  end
+  count
+end
+
+def bench_nqueens : Int64
+  n = 14
+  queens(n, (1_i64 &lt;&lt; n) - 1, 0_i64, 0_i64, 0_i64)
+end
+
+def bench_lcs : Int64
+  n = 8000
+  a = Bytes.new(n)
+  b = Bytes.new(n)
+  x = 12345_u64
+  n.times do |i|
+    x = x &amp;* LCG_A &amp;+ LCG_C
+    a[i] = 65_u8 + ((x &gt;&gt; 33) &amp; 3).to_u8
+  end
+  n.times do |i|
+    x = x &amp;* LCG_A &amp;+ LCG_C
+    b[i] = 65_u8 + ((x &gt;&gt; 33) &amp; 3).to_u8
+  end
+  prev = Array(Int32).new(n + 1, 0)
+  cur = Array(Int32).new(n + 1, 0)
+  (1..n).each do |i|
+    ai = a[i - 1]
+    (1..n).each do |j|
+      if ai == b[j - 1]
+        cur[j] = prev[j - 1] + 1
+      elsif prev[j] &gt;= cur[j - 1]
+        cur[j] = prev[j]
+      else
+        cur[j] = cur[j - 1]
+      end
+    end
+    prev, cur = cur, prev
+  end
+  prev[n].to_i64
+end
+
+# ---------------------------------------------------------------- data structures
+
+class Node
+  def initialize(@l : Node? = nil, @r : Node? = nil)
+  end
+
+  def check : Int64
+    if (l = @l) &amp;&amp; (r = @r)
+      1_i64 + l.check + r.check
+    else
+      1_i64
+    end
+  end
+end
+
+def bottom_up(d : Int32) : Node
+  if d &lt;= 0
+    Node.new
+  else
+    Node.new(bottom_up(d - 1), bottom_up(d - 1))
+  end
+end
+
+def bench_binarytrees : Int64
+  max_depth = 17
+  total = bottom_up(max_depth + 1).check
+  long = bottom_up(max_depth)
+  d = 4
+  while d &lt;= max_depth
+    iters = 1 &lt;&lt; (max_depth - d + 4)
+    c = 0_i64
+    iters.times { c += bottom_up(d).check }
+    total += c
+    d += 4
+  end
+  total += long.check
+  total
+end
+
+def bench_sort : Int64
+  n = 2_000_000
+  a = Array(Int64).new(n, 0_i64)
+  x = 42_u64
+  n.times do |i|
+    x = x &amp;* LCG_A &amp;+ LCG_C
+    a[i] = (x &gt;&gt; 33).to_i64
+  end
+  a.sort!
+  s = a[0] + a[n // 2] + a[n - 1]
+  i = 0
+  while i &lt; n
+    s += a[i]
+    i += 10007
+  end
+  s
+end
+
+def bench_hash_int : Int64
+  m = Hash(Int64, Int64).new
+  x = 7_u64
+  1_000_000_i64.times do |i|
+    x = x &amp;* LCG_A &amp;+ LCG_C
+    m[(x &gt;&gt; 33).to_i64 % 2_000_000] = i
+  end
+  sum = 0_i64
+  2_000_000_i64.times do |i|
+    if v = m[i]?
+      sum += v
+    end
+  end
+  i = 0_i64
+  while i &lt; 2_000_000
+    m.delete(i)
+    i += 2
+  end
+  sum * 7 + m.size
+end
+
+def bench_hash_string : Int64
+  m = Hash(String, Int64).new
+  x = 99_u64
+  500_000.times do
+    x = x &amp;* LCG_A &amp;+ LCG_C
+    id = (x &gt;&gt; 33) % 50_000
+    key = &quot;word#{id}&quot;
+    m[key] = m.fetch(key, 0_i64) + 1
+  end
+  maxc = 0_i64
+  m.each_value { |c| maxc = c if c &gt; maxc }
+  m.size.to_i64 * 1000 + maxc
+end
+
+# ---------------------------------------------------------------- strings / regex
+
+def bench_string_builder : Int64
+  s = String.build do |io|
+    2_000_000.times do |i|
+      io &lt;&lt; &quot;item&quot; &lt;&lt; i &lt;&lt; &#x27;,&#x27;
+    end
+  end
+  count7 = 0_i64
+  s.each_byte { |byte| count7 += 1 if byte == 55_u8 }
+  pieces = 0_i64
+  piece_len = 0_i64
+  s.split(&#x27;,&#x27;).each do |p|
+    if p.bytesize &gt; 0
+      pieces += 1
+      piece_len += p.bytesize
+    end
+  end
+  s.bytesize.to_i64 + count7 * 3 + pieces * 7 + piece_len
+end
+
+RE_EMAIL  = /[a-z]+[0-9]+@[a-z]+[0-9]+\.example\.com/
+RE_STATUS = /status=([0-9]{3})/
+
+class Address
+  include JSON::Serializable
+  property city : String
+  property zip : String
+end
+
+class Person
+  include JSON::Serializable
+  property id : Int64
+  property name : String
+  property email : String
+  property active : Bool
+  property score : Float64
+  property tags : Array(String)
+  property address : Address
+end
+
+module Data
+  @@log_text : String? = nil
+  @@json_text : String? = nil
+  @@people : Array(Person)? = nil
+  @@sha_buf : Bytes? = nil
+
+  def self.log_text : String
+    @@log_text ||= begin
+      statuses = {200, 404, 500, 301}
+      String.build do |io|
+        200_000.times do |i|
+          st = statuses[i % 4]
+          if i % 10 == 0
+            io &lt;&lt; &quot;noise line &quot; &lt;&lt; i &lt;&lt; &quot; status=&quot; &lt;&lt; st &lt;&lt; &#x27;\n&#x27;
+          else
+            io &lt;&lt; &quot;user&quot; &lt;&lt; i &lt;&lt; &quot;@host&quot; &lt;&lt; (i % 100) &lt;&lt; &quot;.example.com visited /path/&quot; &lt;&lt; i &lt;&lt; &quot; status=&quot; &lt;&lt; st &lt;&lt; &#x27;\n&#x27;
+          end
+        end
+      end
+    end
+  end
+
+  def self.json_text : String
+    @@json_text ||= String.build do |io|
+      io &lt;&lt; &#x27;[&#x27;
+      50_000.times do |i|
+        io &lt;&lt; &#x27;,&#x27; if i &gt; 0
+        cents = (i * 37 % 10000) | 1
+        active = i % 3 == 0 ? &quot;false&quot; : &quot;true&quot;
+        io &lt;&lt; %({&quot;id&quot;:) &lt;&lt; i &lt;&lt; %(,&quot;name&quot;:&quot;user) &lt;&lt; i &lt;&lt; %(&quot;,&quot;email&quot;:&quot;user) &lt;&lt; i &lt;&lt; %(@example.com&quot;,&quot;active&quot;:) &lt;&lt; active
+        io &lt;&lt; %(,&quot;score&quot;:) &lt;&lt; (cents // 100) &lt;&lt; &#x27;.&#x27; &lt;&lt; (cents % 100).to_s.rjust(2, &#x27;0&#x27;)
+        io &lt;&lt; %(,&quot;tags&quot;:[&quot;t) &lt;&lt; (i % 7) &lt;&lt; %(&quot;,&quot;t) &lt;&lt; (i % 11) &lt;&lt; %(&quot;,&quot;t) &lt;&lt; (i % 13) &lt;&lt; %(&quot;])
+        io &lt;&lt; %(,&quot;address&quot;:{&quot;city&quot;:&quot;City) &lt;&lt; (i % 100) &lt;&lt; %(&quot;,&quot;zip&quot;:&quot;) &lt;&lt; (10000 + i % 90000) &lt;&lt; %(&quot;}})
+      end
+      io &lt;&lt; &#x27;]&#x27;
+    end
+  end
+
+  def self.people : Array(Person)
+    @@people ||= Array(Person).from_json(json_text)
+  end
+
+  def self.sha_buf : Bytes
+    @@sha_buf ||= begin
+      buf = Bytes.new(32 * 1024 * 1024)
+      x = 2024_u64
+      buf.size.times do |i|
+        x = x &amp;* LCG_A &amp;+ LCG_C
+        buf[i] = (x &gt;&gt; 56).to_u8
+      end
+      buf
+    end
+  end
+end
+
+def bench_regex : Int64
+  text = Data.log_text
+  emails = text.scan(RE_EMAIL).size.to_i64
+  status_sum = 0_i64
+  text.scan(RE_STATUS) { |m| status_sum += m[1].to_i }
+  emails * 1_000_003 + status_sum
+end
+
+# ---------------------------------------------------------------- JSON
+
+def bench_json_dynamic : Int64
+  data = JSON.parse(Data.json_text).as_a
+  sum_id = 0_i64
+  active = 0_i64
+  tags = 0_i64
+  city = 0_i64
+  score = 0.0
+  data.each do |e|
+    o = e.as_h
+    sum_id += o[&quot;id&quot;].as_i64
+    active += 1 if o[&quot;active&quot;].as_bool
+    tags += o[&quot;tags&quot;].as_a.size
+    score += o[&quot;score&quot;].as_f
+    city += o[&quot;address&quot;].as_h[&quot;city&quot;].as_s.size
+  end
+  sum_id + active * 3 + tags * 7 + city * 11 + (score * 100).round_away.to_i64
+end
+
+def bench_json_typed : Int64
+  ps = Array(Person).from_json(Data.json_text)
+  sum_id = 0_i64
+  active = 0_i64
+  tags = 0_i64
+  city = 0_i64
+  score = 0.0
+  ps.each do |p|
+    sum_id += p.id
+    active += 1 if p.active
+    tags += p.tags.size
+    score += p.score
+    city += p.address.city.size
+  end
+  sum_id + active * 3 + tags * 7 + city * 11 + (score * 100).round_away.to_i64
+end
+
+def bench_json_serialize : Int64
+  Data.people.to_json.bytesize.to_i64
+end
+
+# ---------------------------------------------------------------- crypto
+
+def bench_sha256 : Int64
+  buf = Data.sha_buf
+  acc = 0_i64
+  4.times do |r|
+    buf[0] = r.to_u8
+    d = Digest::SHA256.digest(buf)
+    acc = (acc * 31 + d[0].to_i64 * 65536 + d[1].to_i64 * 256 + d[2].to_i64) % 1_000_000_007
+  end
+  acc
+end
+
+# ---------------------------------------------------------------- concurrency
+
+def bench_chan_pingpong : Int64
+  a = Channel(Int64).new
+  b = Channel(Int64).new
+  spawn do
+    while v = a.receive?
+      b.send(v + 1)
+    end
+    b.close
+  end
+  s = 0_i64
+  300_000_i64.times do |i|
+    a.send(i)
+    s += b.receive
+  end
+  a.close
+  s
+end
+
+def bench_spawn_sum : Int64
+  res = Channel(Int64).new(1000)
+  sum = 0_i64
+  100.times do |batch|
+    1000.times do |k|
+      i = (batch * 1000 + k).to_i64
+      spawn { res.send(i * 2) }
+    end
+    1000.times { sum += res.receive }
+  end
+  sum
+end
+
+# ---------------------------------------------------------------- driver
+
+def run(name : String) : Int64
+  case name
+  when &quot;fib&quot;            then bench_fib
+  when &quot;collatz&quot;        then bench_collatz
+  when &quot;sieve&quot;          then bench_sieve
+  when &quot;mandelbrot&quot;     then bench_mandelbrot
+  when &quot;nbody&quot;          then bench_nbody
+  when &quot;matmul&quot;         then bench_matmul
+  when &quot;nqueens&quot;        then bench_nqueens
+  when &quot;lcs&quot;            then bench_lcs
+  when &quot;binarytrees&quot;    then bench_binarytrees
+  when &quot;sort&quot;           then bench_sort
+  when &quot;hash_int&quot;       then bench_hash_int
+  when &quot;hash_string&quot;    then bench_hash_string
+  when &quot;string_builder&quot; then bench_string_builder
+  when &quot;regex&quot;          then bench_regex
+  when &quot;json_dynamic&quot;   then bench_json_dynamic
+  when &quot;json_typed&quot;     then bench_json_typed
+  when &quot;json_serialize&quot; then bench_json_serialize
+  when &quot;sha256&quot;         then bench_sha256
+  when &quot;chan_pingpong&quot;  then bench_chan_pingpong
+  when &quot;spawn_sum&quot;      then bench_spawn_sum
+  else
+    STDERR.puts &quot;unknown benchmark: #{name}&quot;
+    exit 2
+  end
+end
+
+if ARGV.size &lt; 2
+  STDERR.puts &quot;usage: bench &lt;name&gt; &lt;reps&gt;&quot;
+  exit 2
+end
+
+name = ARGV[0]
+reps = ARGV[1].to_i
+
+expected = run(name) # warm-up run, also fixes the expected checksum
+stable = true
+times = [] of String
+reps.times do
+  t0 = Time.monotonic
+  r = run(name)
+  el = (Time.monotonic - t0).total_milliseconds
+  stable = false if r != expected
+  times &lt;&lt; el.round(3).to_s
+end
+puts %({&quot;bench&quot;:&quot;#{name}&quot;,&quot;reps&quot;:#{reps},&quot;times_ms&quot;:[#{times.join(&quot;,&quot;)}],&quot;checksum&quot;:#{expected},&quot;stable&quot;:#{stable}})
+</code></pre></details>
+    <details><summary>Runner script (run_bench.py)</summary><pre><code>#!/usr/bin/env python3
+&quot;&quot;&quot;Runs every benchmark for Crystal and Go, records timings + peak RSS, writes results.json.&quot;&quot;&quot;
+import json, os, platform, statistics, subprocess, sys, time
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(HERE, &quot;out&quot;)
+REPS = int(os.environ.get(&quot;REPS&quot;, &quot;7&quot;))
+
+BENCHES = [
+    # (id, category, title, what it does)
+    (&quot;fib&quot;, &quot;Compute&quot;, &quot;Recursive Fibonacci&quot;, &quot;fib(38): ~126M function calls, pure integer recursion&quot;),
+    (&quot;collatz&quot;, &quot;Compute&quot;, &quot;Collatz chains&quot;, &quot;Longest Collatz chain for every start below 2M (tight integer loop)&quot;),
+    (&quot;sieve&quot;, &quot;Compute&quot;, &quot;Sieve of Eratosthenes&quot;, &quot;Primes below 20M in a 20 MB boolean array&quot;),
+    (&quot;mandelbrot&quot;, &quot;Compute&quot;, &quot;Mandelbrot&quot;, &quot;1000x1000 grid, 100 iterations, float64 math&quot;),
+    (&quot;nbody&quot;, &quot;Compute&quot;, &quot;N-body simulation&quot;, &quot;5 bodies, 3M steps, float64 math + sqrt&quot;),
+    (&quot;matmul&quot;, &quot;Compute&quot;, &quot;Matrix multiply&quot;, &quot;400x400 float64, naive triple loop on flat arrays&quot;),
+    (&quot;nqueens&quot;, &quot;Compute&quot;, &quot;N-Queens (n=14)&quot;, &quot;Bitmask backtracking, 365,596 solutions&quot;),
+    (&quot;lcs&quot;, &quot;Compute&quot;, &quot;Longest common subsequence&quot;, &quot;Dynamic programming on two 8000-char strings (64M cells)&quot;),
+    (&quot;binarytrees&quot;, &quot;Data structures&quot;, &quot;Binary trees&quot;, &quot;Allocate/walk/discard ~17M tree nodes (GC stress)&quot;),
+    (&quot;sort&quot;, &quot;Data structures&quot;, &quot;Sort 2M integers&quot;, &quot;Standard-library sort on 2M pseudo-random Int64&quot;),
+    (&quot;hash_int&quot;, &quot;Data structures&quot;, &quot;Hash map (int keys)&quot;, &quot;1M inserts, 2M lookups, 1M deletes&quot;),
+    (&quot;hash_string&quot;, &quot;Data structures&quot;, &quot;Hash map (string keys)&quot;, &quot;500k word-count updates over 50k distinct string keys&quot;),
+    (&quot;string_builder&quot;, &quot;Strings &amp; regex&quot;, &quot;String building &amp; split&quot;, &quot;Build a ~25 MB string, scan every byte, split on commas&quot;),
+    (&quot;regex&quot;, &quot;Strings &amp; regex&quot;, &quot;Regular expressions&quot;, &quot;Two regexes over a 15 MB, 200k-line log (match + capture)&quot;),
+    (&quot;json_dynamic&quot;, &quot;JSON&quot;, &quot;JSON parse (dynamic)&quot;, &quot;Parse 7 MB / 50k objects into generic values, then walk them&quot;),
+    (&quot;json_typed&quot;, &quot;JSON&quot;, &quot;JSON parse (typed)&quot;, &quot;Parse the same document straight into typed structs/classes&quot;),
+    (&quot;json_serialize&quot;, &quot;JSON&quot;, &quot;JSON serialize&quot;, &quot;Serialize 50k typed objects back to JSON text&quot;),
+    (&quot;sha256&quot;, &quot;Crypto&quot;, &quot;SHA-256&quot;, &quot;Hash a 32 MB buffer 4 times&quot;),
+    (&quot;chan_pingpong&quot;, &quot;Concurrency&quot;, &quot;Channel ping-pong&quot;, &quot;300k unbuffered round trips between two goroutines/fibers&quot;),
+    (&quot;spawn_sum&quot;, &quot;Concurrency&quot;, &quot;Spawn 100k tasks&quot;, &quot;Spawn 100k goroutines/fibers that each send a value over a channel&quot;),
+]
+
+CONFIGS = [
+    (&quot;crystal&quot;, [os.path.join(OUT, &quot;bench_cr&quot;)], {}),
+    (&quot;go&quot;, [os.path.join(OUT, &quot;bench_go&quot;)], {}),
+    (&quot;go_p1&quot;, [os.path.join(OUT, &quot;bench_go&quot;)], {&quot;GOMAXPROCS&quot;: &quot;1&quot;}),
+]
+
+
+def run_one(cmd, extra_env):
+    env = dict(os.environ)
+    env.update(extra_env)
+    # GNU time launches the benchmark from a tiny process, so its max-RSS figure is the
+    # benchmark&#x27;s own peak (os.wait4 from Python would inherit Python&#x27;s ~14 MB footprint).
+    rss_file = os.path.join(OUT, &quot;.rss&quot;)
+    t0 = time.monotonic()
+    p = subprocess.run([&quot;/usr/bin/time&quot;, &quot;-f&quot;, &quot;%M&quot;, &quot;-o&quot;, rss_file] + cmd,
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+    wall = (time.monotonic() - t0) * 1000
+    if p.returncode != 0:
+        return {&quot;error&quot;: p.stderr.decode()[:300] or f&quot;exit status {p.returncode}&quot;}
+    rss_kb = float(open(rss_file).read().strip().splitlines()[-1])
+    out = p.stdout
+    rec = json.loads(out.decode().strip().splitlines()[-1])
+    t = rec[&quot;times_ms&quot;]
+    return {
+        &quot;median_ms&quot;: statistics.median(t),
+        &quot;min_ms&quot;: min(t),
+        &quot;max_ms&quot;: max(t),
+        &quot;stdev_ms&quot;: statistics.pstdev(t),
+        &quot;times_ms&quot;: t,
+        &quot;checksum&quot;: rec[&quot;checksum&quot;],
+        &quot;stable&quot;: rec[&quot;stable&quot;],
+        &quot;peak_rss_mb&quot;: rss_kb / 1024.0,
+        &quot;process_wall_ms&quot;: wall,
+    }
+
+
+def sh(cmd):
+    try:
+        return subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.STDOUT).strip()
+    except Exception as e:
+        return str(e)
+
+
+def main():
+    results = {}
+    for bid, cat, title, desc in BENCHES:
+        results[bid] = {&quot;category&quot;: cat, &quot;title&quot;: title, &quot;desc&quot;: desc}
+        for name, cmd, env in CONFIGS:
+            r = run_one(cmd + [bid, str(REPS)], env)
+            results[bid][name] = r
+            if &quot;error&quot; in r:
+                print(f&quot;{bid:15s} {name:8s} ERROR {r[&#x27;error&#x27;]}&quot;, flush=True)
+            else:
+                print(f&quot;{bid:15s} {name:8s} median {r[&#x27;median_ms&#x27;]:9.1f} ms  rss {r[&#x27;peak_rss_mb&#x27;]:7.1f} MB  sd {r[&#x27;stdev_ms&#x27;]:.1f}&quot;, flush=True)
+        a, b = results[bid][&quot;crystal&quot;], results[bid][&quot;go&quot;]
+        results[bid][&quot;checksum_match&quot;] = (&quot;error&quot; not in a and &quot;error&quot; not in b and a[&quot;checksum&quot;] == b[&quot;checksum&quot;] == results[bid][&quot;go_p1&quot;].get(&quot;checksum&quot;))
+    meta = {
+        &quot;date&quot;: time.strftime(&quot;%Y-%m-%d %H:%M UTC&quot;, time.gmtime()),
+        &quot;reps&quot;: REPS,
+        &quot;cpu&quot;: sh(&quot;lscpu | grep &#x27;Model name&#x27; | sed &#x27;s/.*: *//&#x27;&quot;),
+        &quot;cores&quot;: os.cpu_count(),
+        &quot;mem_mb&quot;: int(sh(&quot;free -m | awk &#x27;/Mem:/{print $2}&#x27;&quot;) or 0),
+        &quot;os&quot;: sh(&quot;grep PRETTY_NAME /etc/os-release | cut -d&#x27;\&quot;&#x27; -f2&quot;),
+        &quot;kernel&quot;: platform.release(),
+        &quot;go_version&quot;: sh(&quot;go version&quot;),
+        &quot;crystal_version&quot;: sh(&quot;crystal --version | head -3 | tr &#x27;\\n&#x27; &#x27; &#x27;&quot;),
+    }
+    with open(os.path.join(HERE, &quot;results.json&quot;), &quot;w&quot;) as f:
+        json.dump({&quot;meta&quot;: meta, &quot;results&quot;: results}, f, indent=1)
+    print(&quot;wrote results.json&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre></details>
+  </section>
+</div>
